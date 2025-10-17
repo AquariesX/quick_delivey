@@ -8,6 +8,8 @@ export async function POST(request) {
   try {
     const { token, email } = await request.json()
 
+    console.log('Verifying vendor with:', { token: token ? 'present' : 'missing', email })
+
     if (!token || !email) {
       return Response.json({ 
         success: false, 
@@ -15,14 +17,20 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
+    // Decode URL-encoded email if needed
+    const decodedEmail = email.includes('%40') ? decodeURIComponent(email) : email
+    console.log('Decoded email:', decodedEmail)
+
     // Find user by email and verification token
     const user = await prisma.users.findFirst({
       where: {
-        email: email,
+        email: decodedEmail,
         verificationToken: token,
         emailVerification: false
       }
     })
+
+    console.log('Found user for verification:', user ? 'Yes' : 'No')
 
     if (!user) {
       return Response.json({ 

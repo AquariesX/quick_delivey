@@ -6,6 +6,8 @@ export async function POST(request) {
   try {
     const { email, password, username, phoneNumber } = await request.json()
 
+    console.log('Setting vendor password for:', { email, username, phoneNumber })
+
     if (!email || !password) {
       return Response.json({ 
         success: false, 
@@ -13,14 +15,20 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
+    // Decode URL-encoded email if needed
+    const decodedEmail = email.includes('%40') ? decodeURIComponent(email) : email
+    console.log('Decoded email:', decodedEmail)
+
     // Find user by email (must be verified)
     const user = await prisma.users.findFirst({
       where: {
-        email: email,
+        email: decodedEmail,
         emailVerification: true,
         password: null // User doesn't have password yet
       }
     })
+
+    console.log('Found user:', user ? 'Yes' : 'No')
 
     if (!user) {
       return Response.json({ 
@@ -41,6 +49,8 @@ export async function POST(request) {
         phoneNumber: phoneNumber || user.phoneNumber
       }
     })
+
+    console.log('Password set successfully for user:', updatedUser.email)
 
     return Response.json({ 
       success: true, 

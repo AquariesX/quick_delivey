@@ -29,29 +29,44 @@ function VerifyVendorContent() {
   const email = searchParams.get('email')
 
   useEffect(() => {
+    console.log('Vendor verification page loaded with params:', { token: token ? 'present' : 'missing', email: email ? 'present' : 'missing' })
+    
     if (!token || !email) {
-      setError('Invalid verification link')
+      console.log('Missing token or email parameters')
+      setError('Invalid verification link - missing required parameters')
       setStep('error')
       return
     }
 
+    // Decode URL-encoded email
+    const decodedEmail = decodeURIComponent(email)
+    console.log('Decoded email:', decodedEmail)
+    
     verifyEmail()
-  }, [token, email, verifyEmail])
+  }, [token, email])
 
   const verifyEmail = useCallback(async () => {
     try {
       setLoading(true)
+      console.log('Starting email verification with:', { token, email })
+      
+      // Decode URL-encoded email
+      const decodedEmail = decodeURIComponent(email)
+      
       const response = await fetch('/api/auth/verify-vendor', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ token, email })
+        body: JSON.stringify({ token, email: decodedEmail })
       })
 
+      console.log('API response status:', response.status)
       const result = await response.json()
+      console.log('API response result:', result)
 
       if (result.success) {
+        console.log('Email verification successful!')
         setUserData(result.user)
         setFormData(prev => ({
           ...prev,
@@ -62,6 +77,7 @@ function VerifyVendorContent() {
         setStep('email-verified')
         setSuccess('Email verified successfully!')
       } else {
+        console.error('Email verification failed:', result.error)
         setError(result.error || 'Invalid or expired verification link')
         setStep('error')
       }

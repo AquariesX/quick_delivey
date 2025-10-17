@@ -11,14 +11,19 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     // Clean and validate the JSON string
     let serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim()
     
-    // Debug: Log the first 50 characters to help identify the issue
-    console.log('Firebase service account key preview:', serviceAccountKey.substring(0, 50) + '...')
-    
     // Handle common formatting issues
     // Replace single quotes with double quotes (common mistake)
     serviceAccountKey = serviceAccountKey.replace(/'/g, '"')
     
-    // Check if the key looks like it might be truncated
+    // Remove any potential BOM or invisible characters
+    serviceAccountKey = serviceAccountKey.replace(/^\uFEFF/, '')
+    
+    // Check if the key looks like it might be truncated or malformed
+    if (!serviceAccountKey.startsWith('{') || !serviceAccountKey.endsWith('}')) {
+      throw new Error('Firebase service account key must be a valid JSON object')
+    }
+    
+    // Check for required fields before parsing
     if (!serviceAccountKey.includes('"type"') || !serviceAccountKey.includes('"project_id"')) {
       throw new Error('Firebase service account key appears to be incomplete or malformed')
     }
@@ -32,29 +37,21 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
     }
     
     firebaseAdminConfig.credential = cert(parsedKey)
-    console.log('Firebase Admin SDK initialized with service account key')
   } catch (error) {
-    console.error('Error parsing Firebase service account key:', error.message)
-    console.log('The service account key appears to be malformed or incomplete.')
-    console.log('Please check your environment variable FIREBASE_SERVICE_ACCOUNT_KEY.')
-    console.log('Attempting to use Application Default Credentials instead...')
-    
-    // Fallback to Application Default Credentials (useful for production deployments)
+    // Silently fallback to Application Default Credentials for production deployments
     try {
       firebaseAdminConfig.credential = applicationDefault()
-      console.log('Firebase Admin SDK initialized with Application Default Credentials')
     } catch (fallbackError) {
-      console.error('Failed to initialize with Application Default Credentials:', fallbackError.message)
-      console.log('Firebase Admin SDK will be initialized without credentials (limited functionality)')
+      // Initialize without credentials (limited functionality)
+      // This allows the app to start even without proper Firebase credentials
     }
   }
 } else {
-  console.log('No FIREBASE_SERVICE_ACCOUNT_KEY provided, attempting to use Application Default Credentials...')
+  // No service account key provided, try Application Default Credentials
   try {
     firebaseAdminConfig.credential = applicationDefault()
-    console.log('Firebase Admin SDK initialized with Application Default Credentials')
   } catch (error) {
-    console.log('Application Default Credentials not available, initializing without credentials')
+    // Initialize without credentials (limited functionality)
   }
 }
 
