@@ -64,7 +64,26 @@ const AdminProductManagement = () => {
     qnty: '',
     stock: '',
     status: true,
-    images: []
+    images: [],
+    // New Product Fields
+    brandName: '',
+    manufacturer: '',
+    keyFeatures: [],
+    productType: '',
+    variations: {},
+    sizeName: '',
+    modelNumber: '',
+    productDimensions: '',
+    packageWeight: '',
+    salePrice: '',
+    saleStartDate: '',
+    saleEndDate: '',
+    currency: 'USD',
+    conditionType: '',
+    warranty: '',
+    ingredients: '',
+    reviews: [],
+    additionalBarcode: ''
   })
 
   // Fetch products from database
@@ -184,7 +203,26 @@ const AdminProductManagement = () => {
           vendorId: userData?.uid, // Use current admin's ID as vendor
           status: formData.status,
           createdById: userData?.uid, // Use current admin's ID as creator
-          proImages: formData.images // Include image URLs
+          proImages: formData.images, // Include image URLs
+          // New Product Fields
+          brandName: formData.brandName || null,
+          manufacturer: formData.manufacturer || null,
+          keyFeatures: formData.keyFeatures.length > 0 ? formData.keyFeatures : null,
+          productType: formData.productType || null,
+          variations: Object.keys(formData.variations).length > 0 ? formData.variations : null,
+          sizeName: formData.sizeName || null,
+          modelNumber: formData.modelNumber || null,
+          productDimensions: formData.productDimensions || null,
+          packageWeight: formData.packageWeight || null,
+          salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
+          saleStartDate: formData.saleStartDate || null,
+          saleEndDate: formData.saleEndDate || null,
+          currency: formData.currency || 'USD',
+          conditionType: formData.conditionType || null,
+          warranty: formData.warranty || null,
+          ingredients: formData.ingredients || null,
+          reviews: formData.reviews.length > 0 ? formData.reviews : null,
+          additionalBarcode: formData.additionalBarcode || null
         })
       })
 
@@ -204,7 +242,26 @@ const AdminProductManagement = () => {
           qnty: '',
           stock: '',
           status: true,
-          images: []
+          images: [],
+          // Reset new fields
+          brandName: '',
+          manufacturer: '',
+          keyFeatures: [],
+          productType: '',
+          variations: {},
+          sizeName: '',
+          modelNumber: '',
+          productDimensions: '',
+          packageWeight: '',
+          salePrice: '',
+          saleStartDate: '',
+          saleEndDate: '',
+          currency: 'USD',
+          conditionType: '',
+          warranty: '',
+          ingredients: '',
+          reviews: [],
+          additionalBarcode: ''
         })
         fetchProducts() // Refresh the list
         if (window.addNotification) {
@@ -1048,6 +1105,134 @@ const AdminProductManagement = () => {
                         {getCreatorType(selectedProduct)}
                       </span>
                     </div>
+
+                    {/* Additional Product Information */}
+                    {(selectedProduct.brandName || selectedProduct.manufacturer || selectedProduct.productType || selectedProduct.modelNumber) && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedProduct.brandName && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Brand Name</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.brandName}</p>
+                            </div>
+                          )}
+                          {selectedProduct.manufacturer && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Manufacturer</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.manufacturer}</p>
+                            </div>
+                          )}
+                          {selectedProduct.productType && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Product Type</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.productType}</p>
+                            </div>
+                          )}
+                          {selectedProduct.modelNumber && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Model Number</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.modelNumber}</p>
+                            </div>
+                          )}
+                          {selectedProduct.sizeName && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Size Name</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.sizeName}</p>
+                            </div>
+                          )}
+                          {selectedProduct.conditionType && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Condition</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.conditionType}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Product Specifications */}
+                    {(selectedProduct.productDimensions || selectedProduct.packageWeight || selectedProduct.warranty) && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Specifications</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedProduct.productDimensions && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Dimensions</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.productDimensions}</p>
+                            </div>
+                          )}
+                          {selectedProduct.packageWeight && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Package Weight</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.packageWeight}</p>
+                            </div>
+                          )}
+                          {selectedProduct.warranty && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Warranty</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.warranty}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sale Information */}
+                    {selectedProduct.salePrice && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Sale Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h5 className="font-medium text-gray-900 mb-1">Sale Price</h5>
+                            <p className="text-lg font-bold text-orange-600">${selectedProduct.salePrice} {selectedProduct.currency || 'USD'}</p>
+                          </div>
+                          {selectedProduct.saleStartDate && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Sale Start Date</h5>
+                              <p className="text-sm text-gray-600">{new Date(selectedProduct.saleStartDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {selectedProduct.saleEndDate && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Sale End Date</h5>
+                              <p className="text-sm text-gray-600">{new Date(selectedProduct.saleEndDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Key Features */}
+                    {selectedProduct.keyFeatures && Array.isArray(selectedProduct.keyFeatures) && selectedProduct.keyFeatures.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Key Features</h4>
+                        <ul className="space-y-2">
+                          {selectedProduct.keyFeatures.map((feature, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                              <span className="text-sm text-gray-600">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Ingredients */}
+                    {selectedProduct.ingredients && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h4>
+                        <p className="text-sm text-gray-600">{selectedProduct.ingredients}</p>
+                      </div>
+                    )}
+
+                    {/* Additional Barcode */}
+                    {selectedProduct.additionalBarcode && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Additional Barcode</h4>
+                        <p className="text-sm text-gray-600">{selectedProduct.additionalBarcode}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

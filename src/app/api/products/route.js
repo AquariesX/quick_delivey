@@ -131,6 +131,16 @@ export async function POST(request) {
     }
 
     if (type === 'product') {
+      console.log('Creating product with data:', {
+        proName: data.proName,
+        catId: data.catId,
+        subCatId: data.subCatId,
+        price: data.price,
+        cost: data.cost,
+        vendorId: data.vendorId,
+        createdById: data.createdById
+      })
+      
       const product = await prisma.product.create({
         data: {
           proName: data.proName,
@@ -148,9 +158,30 @@ export async function POST(request) {
           vendorId: data.vendorId,
           status: (data.status === undefined ? true : !!data.status),
           approvalStatus: 'Pending',
-          createdById: data.createdById
+          createdById: data.createdById,
+          // New Product Fields
+          brandName: data.brandName || null,
+          manufacturer: data.manufacturer || null,
+          keyFeatures: data.keyFeatures || null,
+          productType: data.productType || null,
+          variations: data.variations || null,
+          sizeName: data.sizeName || null,
+          modelNumber: data.modelNumber || null,
+          productDimensions: data.productDimensions || null,
+          packageWeight: data.packageWeight || null,
+          salePrice: data.salePrice ? parseFloat(data.salePrice) : null,
+          saleStartDate: data.saleStartDate ? new Date(data.saleStartDate) : null,
+          saleEndDate: data.saleEndDate ? new Date(data.saleEndDate) : null,
+          currency: data.currency || 'USD',
+          conditionType: data.conditionType || null,
+          warranty: data.warranty || null,
+          ingredients: data.ingredients || null,
+          reviews: data.reviews || null,
+          additionalBarcode: data.additionalBarcode || null
         }
       })
+
+      console.log('Product created successfully:', product.proId)
 
       return Response.json({
         success: true,

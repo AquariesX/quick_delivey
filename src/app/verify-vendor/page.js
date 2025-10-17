@@ -101,18 +101,31 @@ function VerifyVendorContent() {
   const handleSetPassword = async (e) => {
     e.preventDefault()
     
+    console.log('Set password form submitted with data:', {
+      email: formData.email,
+      username: formData.username,
+      phoneNumber: formData.phoneNumber,
+      passwordLength: formData.password.length,
+      confirmPasswordLength: formData.confirmPassword.length
+    })
+    
     if (formData.password !== formData.confirmPassword) {
+      console.log('Password mismatch error')
       setError('Passwords do not match')
       return
     }
     
     if (formData.password.length < 6) {
+      console.log('Password too short error')
       setError('Password must be at least 6 characters long')
       return
     }
     
     try {
       setLoading(true)
+      setError('') // Clear any previous errors
+      
+      console.log('Sending request to set vendor password...')
       const response = await fetch('/api/auth/set-vendor-password', {
         method: 'POST',
         headers: {
@@ -126,12 +139,28 @@ function VerifyVendorContent() {
         })
       })
       
+      console.log('Response status:', response.status)
+      
+      if (!response.ok) {
+        console.log('HTTP error:', response.status, response.statusText)
+        setError(`Server error: ${response.status} ${response.statusText}`)
+        return
+      }
+      
       const result = await response.json()
+      console.log('Response result:', result)
       
       if (result.success) {
+        console.log('Password set successfully, moving to success step')
         setStep('success')
         setSuccess('Password set successfully! You can now login to your account.')
+        
+        // Auto redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push('/login')
+        }, 3000)
       } else {
+        console.log('Password set failed:', result.error)
         setError(result.error || 'Failed to set password')
       }
     } catch (error) {
@@ -199,6 +228,12 @@ function VerifyVendorContent() {
         <p className="text-gray-600">Create a secure password for your vendor account</p>
       </div>
 
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-sm">{error}</p>
+        </div>
+      )}
+      
       <form onSubmit={handleSetPassword} className="space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -266,7 +301,7 @@ function VerifyVendorContent() {
               value={formData.password}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               placeholder="Enter password"
             />
             <button
@@ -291,7 +326,7 @@ function VerifyVendorContent() {
               value={formData.confirmPassword}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               placeholder="Confirm password"
             />
             <button
@@ -312,11 +347,14 @@ function VerifyVendorContent() {
           className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           {loading ? (
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-              className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-            />
+            <>
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
+              />
+              Setting Password...
+            </>
           ) : (
             <>
               <Lock className="w-4 h-4" />
@@ -339,7 +377,8 @@ function VerifyVendorContent() {
         <CheckCircle className="w-8 h-8 text-green-600" />
       </div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Account Setup Complete!</h2>
-      <p className="text-gray-600 mb-6">Your vendor account has been successfully set up. You can now login to your dashboard.</p>
+      <p className="text-gray-600 mb-4">Your vendor account has been successfully set up. You can now login to your dashboard.</p>
+      <p className="text-sm text-gray-500 mb-6">Redirecting to login page in 3 seconds...</p>
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -347,7 +386,7 @@ function VerifyVendorContent() {
         className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 mx-auto"
       >
         <ArrowRight className="w-4 h-4" />
-        Go to Login
+        Go to Login Now
       </motion.button>
     </motion.div>
   )

@@ -109,6 +109,26 @@ model Product {
   createdAt       DateTime       @default(now()) @map("created_at")
   updatedAt       DateTime       @updatedAt @map("updated_at")
 
+  // New Product Fields
+  brandName           String?   @map("brand_name") @db.VarChar(255)
+  manufacturer        String?   @db.VarChar(255)
+  keyFeatures         Json?     @map("key_features") // Array of bullet points
+  productType         String?   @map("product_type") @db.VarChar(100)
+  variations          Json?     // Object with size, color, flavor, etc.
+  sizeName            String?   @map("size_name") @db.VarChar(100)
+  modelNumber         String?   @map("model_number") @db.VarChar(100)
+  productDimensions   String?   @map("product_dimensions") @db.VarChar(255)
+  packageWeight       String?   @map("package_weight") @db.VarChar(100)
+  salePrice           Decimal?  @map("sale_price") @db.Decimal(10, 2)
+  saleStartDate       DateTime? @map("sale_start_date")
+  saleEndDate         DateTime? @map("sale_end_date")
+  currency            String?   @default("USD") @db.VarChar(10)
+  conditionType       String?   @map("condition_type") @db.VarChar(50)
+  warranty            String?   @db.VarChar(255)
+  ingredients         String?   @db.Text
+  reviews             Json?     // Array of review objects
+  additionalBarcode   String?   @map("additional_barcode") @db.VarChar(100)
+
   // Relations
   category   Category   @relation(fields: [catId], references: [id], onDelete: Cascade)
   subCategory SubCategory @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)

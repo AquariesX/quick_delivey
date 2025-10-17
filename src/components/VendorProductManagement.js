@@ -60,7 +60,26 @@ const VendorProductManagement = () => {
     qnty: '',
     stock: '',
     status: true,
-    images: []
+    images: [],
+    // New Product Fields
+    brandName: '',
+    manufacturer: '',
+    keyFeatures: [],
+    productType: '',
+    variations: {},
+    sizeName: '',
+    modelNumber: '',
+    productDimensions: '',
+    packageWeight: '',
+    salePrice: '',
+    saleStartDate: '',
+    saleEndDate: '',
+    currency: 'USD',
+    conditionType: '',
+    warranty: '',
+    ingredients: '',
+    reviews: [],
+    additionalBarcode: ''
   })
 
 
@@ -220,7 +239,26 @@ const VendorProductManagement = () => {
       qnty: product.qnty.toString(),
       stock: product.stock.toString(),
       status: product.status,
-      images: product.proImages || []
+      images: product.proImages || [],
+      // New Product Fields
+      brandName: product.brandName || '',
+      manufacturer: product.manufacturer || '',
+      keyFeatures: product.keyFeatures || [],
+      productType: product.productType || '',
+      variations: product.variations || {},
+      sizeName: product.sizeName || '',
+      modelNumber: product.modelNumber || '',
+      productDimensions: product.productDimensions || '',
+      packageWeight: product.packageWeight || '',
+      salePrice: product.salePrice ? product.salePrice.toString() : '',
+      saleStartDate: product.saleStartDate || '',
+      saleEndDate: product.saleEndDate || '',
+      currency: product.currency || 'USD',
+      conditionType: product.conditionType || '',
+      warranty: product.warranty || '',
+      ingredients: product.ingredients || '',
+      reviews: product.reviews || [],
+      additionalBarcode: product.additionalBarcode || ''
     })
     setShowEditModal(true)
   }
@@ -892,6 +930,134 @@ const VendorProductManagement = () => {
                         </span>
                       </div>
                     </div>
+
+                    {/* Additional Product Information */}
+                    {(selectedProduct.brandName || selectedProduct.manufacturer || selectedProduct.productType || selectedProduct.modelNumber) && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Additional Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedProduct.brandName && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Brand Name</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.brandName}</p>
+                            </div>
+                          )}
+                          {selectedProduct.manufacturer && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Manufacturer</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.manufacturer}</p>
+                            </div>
+                          )}
+                          {selectedProduct.productType && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Product Type</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.productType}</p>
+                            </div>
+                          )}
+                          {selectedProduct.modelNumber && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Model Number</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.modelNumber}</p>
+                            </div>
+                          )}
+                          {selectedProduct.sizeName && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Size Name</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.sizeName}</p>
+                            </div>
+                          )}
+                          {selectedProduct.conditionType && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Condition</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.conditionType}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Product Specifications */}
+                    {(selectedProduct.productDimensions || selectedProduct.packageWeight || selectedProduct.warranty) && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Specifications</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          {selectedProduct.productDimensions && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Dimensions</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.productDimensions}</p>
+                            </div>
+                          )}
+                          {selectedProduct.packageWeight && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Package Weight</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.packageWeight}</p>
+                            </div>
+                          )}
+                          {selectedProduct.warranty && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Warranty</h5>
+                              <p className="text-sm text-gray-600">{selectedProduct.warranty}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sale Information */}
+                    {selectedProduct.salePrice && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Sale Information</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <h5 className="font-medium text-gray-900 mb-1">Sale Price</h5>
+                            <p className="text-lg font-bold text-orange-600">${selectedProduct.salePrice} {selectedProduct.currency || 'USD'}</p>
+                          </div>
+                          {selectedProduct.saleStartDate && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Sale Start Date</h5>
+                              <p className="text-sm text-gray-600">{new Date(selectedProduct.saleStartDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                          {selectedProduct.saleEndDate && (
+                            <div>
+                              <h5 className="font-medium text-gray-900 mb-1">Sale End Date</h5>
+                              <p className="text-sm text-gray-600">{new Date(selectedProduct.saleEndDate).toLocaleDateString()}</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Key Features */}
+                    {selectedProduct.keyFeatures && Array.isArray(selectedProduct.keyFeatures) && selectedProduct.keyFeatures.length > 0 && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Key Features</h4>
+                        <ul className="space-y-2">
+                          {selectedProduct.keyFeatures.map((feature, index) => (
+                            <li key={index} className="flex items-start">
+                              <span className="w-2 h-2 bg-green-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
+                              <span className="text-sm text-gray-600">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
+                    {/* Ingredients */}
+                    {selectedProduct.ingredients && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Ingredients</h4>
+                        <p className="text-sm text-gray-600">{selectedProduct.ingredients}</p>
+                      </div>
+                    )}
+
+                    {/* Additional Barcode */}
+                    {selectedProduct.additionalBarcode && (
+                      <div className="mt-6 pt-6 border-t border-gray-200">
+                        <h4 className="text-lg font-medium text-gray-900 mb-4">Additional Barcode</h4>
+                        <p className="text-sm text-gray-600">{selectedProduct.additionalBarcode}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1062,6 +1228,258 @@ const VendorProductManagement = () => {
                     className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
                     placeholder="Enter product description"
                   />
+                </div>
+
+                {/* Additional Product Information */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">Additional Product Information</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Brand Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Brand Name</label>
+                      <input
+                        type="text"
+                        value={formData.brandName}
+                        onChange={(e) => setFormData({...formData, brandName: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="Enter brand name"
+                      />
+                    </div>
+
+                    {/* Manufacturer */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Manufacturer</label>
+                      <input
+                        type="text"
+                        value={formData.manufacturer}
+                        onChange={(e) => setFormData({...formData, manufacturer: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="Enter manufacturer"
+                      />
+                    </div>
+
+                    {/* Product Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Product Type</label>
+                      <select
+                        value={formData.productType}
+                        onChange={(e) => setFormData({...formData, productType: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      >
+                        <option value="">Select Product Type</option>
+                        <option value="Physical">Physical Product</option>
+                        <option value="Digital">Digital Product</option>
+                        <option value="Service">Service</option>
+                        <option value="Subscription">Subscription</option>
+                      </select>
+                    </div>
+
+                    {/* Model Number */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Model Number</label>
+                      <input
+                        type="text"
+                        value={formData.modelNumber}
+                        onChange={(e) => setFormData({...formData, modelNumber: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="Enter model number"
+                      />
+                    </div>
+
+                    {/* Size Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Size Name</label>
+                      <input
+                        type="text"
+                        value={formData.sizeName}
+                        onChange={(e) => setFormData({...formData, sizeName: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="e.g., Small, Medium, Large"
+                      />
+                    </div>
+
+                    {/* Condition Type */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Condition Type</label>
+                      <select
+                        value={formData.conditionType}
+                        onChange={(e) => setFormData({...formData, conditionType: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      >
+                        <option value="">Select Condition</option>
+                        <option value="New">New</option>
+                        <option value="Used">Used</option>
+                        <option value="Refurbished">Refurbished</option>
+                        <option value="Open Box">Open Box</option>
+                      </select>
+                    </div>
+
+                    {/* Product Dimensions */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Product Dimensions</label>
+                      <input
+                        type="text"
+                        value={formData.productDimensions}
+                        onChange={(e) => setFormData({...formData, productDimensions: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="e.g., 10 x 5 x 3 inches"
+                      />
+                    </div>
+
+                    {/* Package Weight */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Package Weight</label>
+                      <input
+                        type="text"
+                        value={formData.packageWeight}
+                        onChange={(e) => setFormData({...formData, packageWeight: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="e.g., 2.5 lbs"
+                      />
+                    </div>
+
+                    {/* Warranty */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Warranty</label>
+                      <input
+                        type="text"
+                        value={formData.warranty}
+                        onChange={(e) => setFormData({...formData, warranty: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="e.g., 1 year manufacturer warranty"
+                      />
+                    </div>
+
+                    {/* Additional Barcode */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Additional Barcode</label>
+                      <input
+                        type="text"
+                        value={formData.additionalBarcode}
+                        onChange={(e) => setFormData({...formData, additionalBarcode: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                        placeholder="Enter additional barcode"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Key Features */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Key Product Features</label>
+                    <div className="space-y-2">
+                      {formData.keyFeatures.map((feature, index) => (
+                        <div key={index} className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            value={feature}
+                            onChange={(e) => {
+                              const newFeatures = [...formData.keyFeatures]
+                              newFeatures[index] = e.target.value
+                              setFormData({...formData, keyFeatures: newFeatures})
+                            }}
+                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                            placeholder="Enter feature"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const newFeatures = formData.keyFeatures.filter((_, i) => i !== index)
+                              setFormData({...formData, keyFeatures: newFeatures})
+                            }}
+                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newFeatures = [...formData.keyFeatures, '']
+                          setFormData({...formData, keyFeatures: newFeatures})
+                        }}
+                        className="px-4 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
+                      >
+                        + Add Feature
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Ingredients */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
+                    <textarea
+                      value={formData.ingredients}
+                      onChange={(e) => setFormData({...formData, ingredients: e.target.value})}
+                      rows={3}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      placeholder="Enter ingredients (for food/cosmetics products)"
+                    />
+                  </div>
+                </div>
+
+                {/* Sale Information */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">Sale Information</h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Sale Price */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sale Price</label>
+                      <div className="relative">
+                        <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={formData.salePrice}
+                          onChange={(e) => setFormData({...formData, salePrice: e.target.value})}
+                          className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                          placeholder="0.00"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Sale Start Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sale Start Date</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.saleStartDate}
+                        onChange={(e) => setFormData({...formData, saleStartDate: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      />
+                    </div>
+
+                    {/* Sale End Date */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Sale End Date</label>
+                      <input
+                        type="datetime-local"
+                        value={formData.saleEndDate}
+                        onChange={(e) => setFormData({...formData, saleEndDate: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      />
+                    </div>
+
+                    {/* Currency */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
+                      <select
+                        value={formData.currency}
+                        onChange={(e) => setFormData({...formData, currency: e.target.value})}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900"
+                      >
+                        <option value="USD">USD - US Dollar</option>
+                        <option value="EUR">EUR - Euro</option>
+                        <option value="GBP">GBP - British Pound</option>
+                        <option value="CAD">CAD - Canadian Dollar</option>
+                        <option value="AUD">AUD - Australian Dollar</option>
+                        <option value="JPY">JPY - Japanese Yen</option>
+                        <option value="PKR">PKR - Pakistani Rupee</option>
+                      </select>
+                    </div>
+                  </div>
                 </div>
 
                 {/* Image Upload Section */}

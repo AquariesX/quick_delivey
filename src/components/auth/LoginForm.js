@@ -38,12 +38,16 @@ const LoginForm = () => {
     
     try {
       console.log('Attempting login with:', formData.email)
-      await signIn(formData.email, formData.password)
-      toast.success('Login successful!')
-      router.push('/dashboard')
+      const user = await signIn(formData.email, formData.password)
+      if (user) {
+        toast.success('Login successful!')
+        router.push('/dashboard')
+      }
+      // If signIn returns null, it means the user needs to complete setup
+      // The error message is already shown by the signIn function
     } catch (error) {
       console.error('Login error:', error)
-      toast.error('Login failed. Please check your credentials.')
+      // Error messages are handled by the signIn function
     } finally {
       setIsLoading(false)
     }

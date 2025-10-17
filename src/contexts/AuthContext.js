@@ -306,6 +306,25 @@ export default function AuthContextProvider({ children }) {
   const signIn = async (email, password) => {
     try {
       setLoading(true)
+      
+      // First, check if this is a vendor who needs to set their password
+      try {
+        const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.user && result.user.role === 'VENDOR') {
+            // Check if vendor has set their password (has Firebase UID)
+            if (!result.user.uid || result.user.uid.startsWith('temp_')) {
+              toast.error('Please complete your account setup by setting your password first.')
+              return null
+            }
+          }
+        }
+      } catch (dbError) {
+        console.error('Error checking user status:', dbError)
+      }
+      
+      // Proceed with Firebase authentication
       const { user } = await signInWithEmailAndPassword(auth, email, password)
       
       // For vendors, check database verification status instead of Firebase verification
@@ -336,7 +355,30 @@ export default function AuthContextProvider({ children }) {
         return null
       }
     } catch (error) {
-      toast.error(getErrorMessage(error.code))
+      console.error('Sign in error:', error)
+      
+      // Handle specific Firebase errors
+      if (error.code === 'auth/invalid-credential') {
+        // Check if this is a vendor who hasn't set their password yet
+        try {
+          const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+          if (response.ok) {
+            const result = await response.json()
+            if (result.success && result.user && result.user.role === 'VENDOR' && result.user.emailVerification) {
+              if (!result.user.uid || result.user.uid.startsWith('temp_')) {
+                toast.error('Please complete your account setup by setting your password first.')
+                return null
+              }
+            }
+          }
+        } catch (dbError) {
+          console.error('Error checking user status:', dbError)
+        }
+        
+        toast.error('Invalid email or password. Please check your credentials.')
+      } else {
+        toast.error(getErrorMessage(error.code))
+      }
       throw error
     } finally {
       setLoading(false)

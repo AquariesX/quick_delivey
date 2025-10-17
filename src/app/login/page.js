@@ -169,6 +169,30 @@ export default function LoginPage() {
           {/* Login Form */}
           <LoginForm />
 
+          {/* Vendor Setup Help */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
+          >
+            <div className="flex items-start space-x-3">
+              <div className="flex-shrink-0">
+                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">i</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-medium text-blue-800 mb-1">
+                  Vendor Account Setup
+                </h3>
+                <p className="text-sm text-blue-700">
+                  If you received an invitation email, please complete your account setup by setting your password first before logging in.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+
           {/* Switch to Register */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}

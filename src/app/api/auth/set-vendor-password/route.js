@@ -16,17 +16,50 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
+    // Test database connection first
+    try {
+      await prisma.$connect()
+      console.log('Database connection successful')
+    } catch (dbError) {
+      console.error('Database connection failed:', dbError.message)
+      return Response.json({ 
+        success: false, 
+        error: 'Database connection failed. Please try again later.' 
+      }, { status: 500 })
+    }
+
     // Decode URL-encoded email if needed
     const decodedEmail = email.includes('%40') ? decodeURIComponent(email) : email
     console.log('Decoded email:', decodedEmail)
 
-    // Find user by email (must be verified)
-    const user = await prisma.users.findFirst({
-      where: {
-        email: decodedEmail,
-        emailVerification: true
+    // Find user by email (must be verified) with retry
+    let user
+    let retryCount = 0
+    const maxRetries = 3
+    
+    while (retryCount < maxRetries) {
+      try {
+        user = await prisma.users.findFirst({
+          where: {
+            email: decodedEmail,
+            emailVerification: true
+          }
+        })
+        break // Success, exit retry loop
+      } catch (dbError) {
+        retryCount++
+        console.log(`Database query attempt ${retryCount} failed:`, dbError.message)
+        if (retryCount >= maxRetries) {
+          console.error('All database query attempts failed')
+          return Response.json({ 
+            success: false, 
+            error: 'Database connection issue. Please try again later.' 
+          }, { status: 500 })
+        }
+        // Wait 1 second before retry
+        await new Promise(resolve => setTimeout(resolve, 1000))
       }
-    })
+    }
 
     console.log('Found user:', user ? 'Yes' : 'No')
 
@@ -57,7 +90,7 @@ export async function POST(request) {
         const updatedUser = await prisma.users.update({
           where: { id: user.id },
           data: {
-            uid: firebaseUser.uid, // Ensure UID is set
+            uid: firebaseUser.uid || user.uid, // Ensure UID is set, fallback to existing
             username: username || user.username,
             phoneNumber: phoneNumber || user.phoneNumber
           }
@@ -134,7 +167,7 @@ export async function POST(request) {
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
-        uid: firebaseUser.uid, // Update with real Firebase UID
+        uid: firebaseUser.uid || user.uid, // Update with real Firebase UID, fallback to existing
         password: hashedPassword,
         username: username || user.username,
         phoneNumber: phoneNumber || user.phoneNumber

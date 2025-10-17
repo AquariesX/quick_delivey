@@ -45,7 +45,26 @@ const AddProductPage = () => {
     qnty: '',
     stock: '',
     status: true,
-    images: []
+    images: [],
+    // New Product Fields
+    brandName: '',
+    manufacturer: '',
+    keyFeatures: [],
+    productType: '',
+    variations: {},
+    sizeName: '',
+    modelNumber: '',
+    productDimensions: '',
+    packageWeight: '',
+    salePrice: '',
+    saleStartDate: '',
+    saleEndDate: '',
+    currency: 'USD',
+    conditionType: '',
+    warranty: '',
+    ingredients: '',
+    reviews: [],
+    additionalBarcode: ''
   })
 
   const [errors, setErrors] = useState({})
@@ -132,7 +151,18 @@ const AddProductPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     
+    console.log('Form submission started with data:', {
+      proName: formData.proName,
+      catId: formData.catId,
+      subCatId: formData.subCatId,
+      price: formData.price,
+      cost: formData.cost,
+      vendorId: userData?.uid,
+      createdById: userData?.uid
+    })
+    
     if (!validateForm()) {
+      console.log('Form validation failed')
       if (window.addNotification) {
         window.addNotification('Please fix the errors before submitting', 'error')
       }
@@ -142,33 +172,59 @@ const AddProductPage = () => {
     setIsSubmitting(true)
     
     try {
+      const requestBody = {
+        type: 'product',
+        proName: formData.proName,
+        description: formData.description,
+        catId: formData.catId,
+        subCatId: parseInt(formData.subCatId),
+        price: parseFloat(formData.price),
+        cost: parseFloat(formData.cost),
+        discount: parseFloat(formData.discount) || 0,
+        sku: formData.sku,
+        barcode: formData.barcode || formData.sku,
+        qnty: parseInt(formData.qnty) || parseInt(formData.stock),
+        stock: parseInt(formData.stock),
+        proImages: formData.images,
+        vendorId: userData?.uid,
+        createdById: userData?.uid,
+        // New Product Fields
+        brandName: formData.brandName || null,
+        manufacturer: formData.manufacturer || null,
+        keyFeatures: formData.keyFeatures.length > 0 ? formData.keyFeatures : null,
+        productType: formData.productType || null,
+        variations: Object.keys(formData.variations).length > 0 ? formData.variations : null,
+        sizeName: formData.sizeName || null,
+        modelNumber: formData.modelNumber || null,
+        productDimensions: formData.productDimensions || null,
+        packageWeight: formData.packageWeight || null,
+        salePrice: formData.salePrice ? parseFloat(formData.salePrice) : null,
+        saleStartDate: formData.saleStartDate || null,
+        saleEndDate: formData.saleEndDate || null,
+        currency: formData.currency || 'USD',
+        conditionType: formData.conditionType || null,
+        warranty: formData.warranty || null,
+        ingredients: formData.ingredients || null,
+        reviews: formData.reviews.length > 0 ? formData.reviews : null,
+        additionalBarcode: formData.additionalBarcode || null
+      }
+      
+      console.log('Sending request to API with body:', requestBody)
+      
       const response = await fetch('/api/products', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          type: 'product',
-          proName: formData.proName,
-          description: formData.description,
-          catId: formData.catId,
-          subCatId: parseInt(formData.subCatId),
-          price: parseFloat(formData.price),
-          cost: parseFloat(formData.cost),
-          discount: parseFloat(formData.discount) || 0,
-          sku: formData.sku,
-          barcode: formData.barcode || formData.sku,
-          qnty: parseInt(formData.qnty) || parseInt(formData.stock),
-          stock: parseInt(formData.stock),
-          proImages: formData.images,
-          vendorId: userData?.uid,
-          createdById: userData?.uid
-        })
+        body: JSON.stringify(requestBody)
       })
 
+      console.log('API response status:', response.status)
       const result = await response.json()
+      console.log('API response result:', result)
       
       if (result.success) {
+        console.log('Product created successfully')
         if (window.addNotification) {
           window.addNotification('Product added successfully!', 'success')
         }
@@ -456,6 +512,306 @@ const AddProductPage = () => {
                   className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 transition-colors"
                   placeholder="Enter product description"
                 />
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Additional Product Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center mb-6">
+              <Package className="w-6 h-6 text-purple-500 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">Additional Product Information</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Brand Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Brand Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.brandName}
+                  onChange={(e) => handleInputChange('brandName', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="Enter brand name"
+                />
+              </div>
+
+              {/* Manufacturer */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Manufacturer
+                </label>
+                <input
+                  type="text"
+                  value={formData.manufacturer}
+                  onChange={(e) => handleInputChange('manufacturer', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="Enter manufacturer"
+                />
+              </div>
+
+              {/* Product Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Type
+                </label>
+                <select
+                  value={formData.productType}
+                  onChange={(e) => handleInputChange('productType', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                >
+                  <option value="">Select Product Type</option>
+                  <option value="Physical">Physical Product</option>
+                  <option value="Digital">Digital Product</option>
+                  <option value="Service">Service</option>
+                  <option value="Subscription">Subscription</option>
+                </select>
+              </div>
+
+              {/* Model Number */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Model Number
+                </label>
+                <input
+                  type="text"
+                  value={formData.modelNumber}
+                  onChange={(e) => handleInputChange('modelNumber', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="Enter model number"
+                />
+              </div>
+
+              {/* Size Name */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Size Name
+                </label>
+                <input
+                  type="text"
+                  value={formData.sizeName}
+                  onChange={(e) => handleInputChange('sizeName', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="e.g., Small, Medium, Large"
+                />
+              </div>
+
+              {/* Condition Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Condition Type
+                </label>
+                <select
+                  value={formData.conditionType}
+                  onChange={(e) => handleInputChange('conditionType', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                >
+                  <option value="">Select Condition</option>
+                  <option value="New">New</option>
+                  <option value="Used">Used</option>
+                  <option value="Refurbished">Refurbished</option>
+                  <option value="Open Box">Open Box</option>
+                </select>
+              </div>
+
+              {/* Product Dimensions */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Product Dimensions
+                </label>
+                <input
+                  type="text"
+                  value={formData.productDimensions}
+                  onChange={(e) => handleInputChange('productDimensions', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="e.g., 10 x 5 x 3 inches"
+                />
+              </div>
+
+              {/* Package Weight */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Package Weight
+                </label>
+                <input
+                  type="text"
+                  value={formData.packageWeight}
+                  onChange={(e) => handleInputChange('packageWeight', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="e.g., 2.5 lbs"
+                />
+              </div>
+
+              {/* Warranty */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Warranty
+                </label>
+                <input
+                  type="text"
+                  value={formData.warranty}
+                  onChange={(e) => handleInputChange('warranty', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="e.g., 1 year manufacturer warranty"
+                />
+              </div>
+
+              {/* Additional Barcode */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Additional Barcode
+                </label>
+                <input
+                  type="text"
+                  value={formData.additionalBarcode}
+                  onChange={(e) => handleInputChange('additionalBarcode', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                  placeholder="Enter additional barcode"
+                />
+              </div>
+            </div>
+
+            {/* Key Features */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Key Product Features
+              </label>
+              <div className="space-y-2">
+                {formData.keyFeatures.map((feature, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    <input
+                      type="text"
+                      value={feature}
+                      onChange={(e) => {
+                        const newFeatures = [...formData.keyFeatures]
+                        newFeatures[index] = e.target.value
+                        handleInputChange('keyFeatures', newFeatures)
+                      }}
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                      placeholder="Enter feature"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newFeatures = formData.keyFeatures.filter((_, i) => i !== index)
+                        handleInputChange('keyFeatures', newFeatures)
+                      }}
+                      className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const newFeatures = [...formData.keyFeatures, '']
+                    handleInputChange('keyFeatures', newFeatures)
+                  }}
+                  className="px-4 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 rounded-lg transition-colors border border-green-200"
+                >
+                  + Add Feature
+                </button>
+              </div>
+            </div>
+
+            {/* Ingredients */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Ingredients
+              </label>
+              <textarea
+                value={formData.ingredients}
+                onChange={(e) => handleInputChange('ingredients', e.target.value)}
+                rows={3}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                placeholder="Enter ingredients (for food/cosmetics products)"
+              />
+            </div>
+          </motion.div>
+
+          {/* Sale Information */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+          >
+            <div className="flex items-center mb-6">
+              <DollarSign className="w-6 h-6 text-orange-500 mr-3" />
+              <h2 className="text-xl font-semibold text-gray-900">Sale Information</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Sale Price */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sale Price
+                </label>
+                <div className="relative">
+                  <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={formData.salePrice}
+                    onChange={(e) => handleInputChange('salePrice', e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+
+              {/* Sale Start Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sale Start Date
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.saleStartDate}
+                  onChange={(e) => handleInputChange('saleStartDate', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                />
+              </div>
+
+              {/* Sale End Date */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Sale End Date
+                </label>
+                <input
+                  type="datetime-local"
+                  value={formData.saleEndDate}
+                  onChange={(e) => handleInputChange('saleEndDate', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                />
+              </div>
+
+              {/* Currency */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Currency
+                </label>
+                <select
+                  value={formData.currency}
+                  onChange={(e) => handleInputChange('currency', e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
+                >
+                  <option value="USD">USD - US Dollar</option>
+                  <option value="EUR">EUR - Euro</option>
+                  <option value="GBP">GBP - British Pound</option>
+                  <option value="CAD">CAD - Canadian Dollar</option>
+                  <option value="AUD">AUD - Australian Dollar</option>
+                  <option value="JPY">JPY - Japanese Yen</option>
+                  <option value="PKR">PKR - Pakistani Rupee</option>
+                </select>
               </div>
             </div>
           </motion.div>
