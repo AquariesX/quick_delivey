@@ -1,72 +1,114 @@
 #!/usr/bin/env node
 
 /**
- * Helper script to format Firebase service account key for environment variables
+ * Firebase Service Account Key Formatter
  * 
- * Usage:
- * 1. Download your Firebase service account JSON file
- * 2. Run: node scripts/format-firebase-key.js path/to/your/service-account-key.json
- * 3. Copy the output and use it as your FIREBASE_SERVICE_ACCOUNT_KEY environment variable
+ * This script helps format Firebase service account keys properly for deployment.
+ * It can be used to validate and format the JSON key.
  */
 
 const fs = require('fs');
 const path = require('path');
 
-function formatFirebaseKey(jsonFilePath) {
+function formatFirebaseKey() {
+  console.log('🔧 Firebase Service Account Key Formatter');
+  console.log('==========================================\n');
+
+  // Check if key is provided as argument
+  const keyArg = process.argv[2];
+  
+  if (keyArg) {
+    console.log('📝 Processing provided key...');
+    processKey(keyArg);
+    return;
+  }
+
+  // Check if key is in environment variable
+  const envKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  
+  if (envKey) {
+    console.log('📝 Processing environment variable key...');
+    processKey(envKey);
+    return;
+  }
+
+  // Check if key file exists
+  const keyFile = path.join(process.cwd(), 'firebase-service-account.json');
+  
+  if (fs.existsSync(keyFile)) {
+    console.log('📝 Processing key file...');
+    const keyContent = fs.readFileSync(keyFile, 'utf8');
+    processKey(keyContent);
+    return;
+  }
+
+  console.log('❌ No Firebase service account key found.');
+  console.log('\nUsage options:');
+  console.log('1. node scripts/format-firebase-key.js "your-json-key-here"');
+  console.log('2. FIREBASE_SERVICE_ACCOUNT_KEY="your-key" node scripts/format-firebase-key.js');
+  console.log('3. Place your key in firebase-service-account.json file');
+  console.log('\nFor deployment, set the environment variable:');
+  console.log('FIREBASE_SERVICE_ACCOUNT_KEY=\'{"type":"service_account",...}\'');
+}
+
+function processKey(keyString) {
   try {
-    // Read the JSON file
-    const jsonContent = fs.readFileSync(jsonFilePath, 'utf8');
+    console.log('\n🔍 Analyzing key...');
     
-    // Parse and validate the JSON
-    const serviceAccount = JSON.parse(jsonContent);
+    // Show preview
+    const preview = keyString.trim().substring(0, 100);
+    console.log('Preview:', preview + (keyString.length > 100 ? '...' : ''));
+    
+    // Clean the key
+    let cleanedKey = keyString.trim();
+    
+    // Replace single quotes with double quotes
+    cleanedKey = cleanedKey.replace(/'/g, '"');
+    
+    // Try to parse
+    const parsedKey = JSON.parse(cleanedKey);
     
     // Validate required fields
     const requiredFields = ['type', 'project_id', 'private_key', 'client_email'];
-    const missingFields = requiredFields.filter(field => !serviceAccount[field]);
+    const missingFields = requiredFields.filter(field => !parsedKey[field]);
     
     if (missingFields.length > 0) {
-      console.error('❌ Error: Missing required fields:', missingFields.join(', '));
-      process.exit(1);
+      console.log('❌ Missing required fields:', missingFields.join(', '));
+      return;
     }
     
-    // Stringify back to a single line
-    const formattedKey = JSON.stringify(serviceAccount);
+    console.log('✅ Key is valid!');
+    console.log('📋 Key details:');
+    console.log('   Type:', parsedKey.type);
+    console.log('   Project ID:', parsedKey.project_id);
+    console.log('   Client Email:', parsedKey.client_email);
+    console.log('   Private Key:', parsedKey.private_key ? 'Present' : 'Missing');
     
-    console.log('✅ Successfully formatted Firebase service account key!');
-    console.log('\n📋 Copy this value and set it as your FIREBASE_SERVICE_ACCOUNT_KEY environment variable:');
-    console.log('\n' + '='.repeat(80));
-    console.log(formattedKey);
-    console.log('='.repeat(80));
+    // Generate formatted key for deployment
+    const formattedKey = JSON.stringify(parsedKey);
+    console.log('\n🚀 Formatted key for deployment:');
+    console.log('FIREBASE_SERVICE_ACCOUNT_KEY=\'' + formattedKey + '\'');
     
-    console.log('\n💡 Tips:');
-    console.log('- Make sure to copy the ENTIRE line above');
-    console.log('- Don\'t add any extra quotes or formatting');
-    console.log('- For Vercel: Go to Settings → Environment Variables → Add FIREBASE_SERVICE_ACCOUNT_KEY');
-    console.log('- For local development: Add to .env.local file');
+    // Save to file
+    const outputFile = path.join(process.cwd(), 'firebase-key-formatted.json');
+    fs.writeFileSync(outputFile, formattedKey);
+    console.log('\n💾 Formatted key saved to:', outputFile);
     
   } catch (error) {
-    console.error('❌ Error:', error.message);
-    console.log('\n💡 Make sure you provided the correct path to your Firebase service account JSON file');
-    process.exit(1);
+    console.log('❌ Error processing key:', error.message);
+    
+    if (error.message.includes('Unexpected token')) {
+      console.log('\n🔧 Common issues:');
+      console.log('1. Key might be truncated or incomplete');
+      console.log('2. Single quotes instead of double quotes');
+      console.log('3. Missing quotes around property names');
+      console.log('4. Invalid JSON structure');
+      
+      console.log('\n📝 Expected format:');
+      console.log('{"type":"service_account","project_id":"your-project",...}');
+    }
   }
 }
 
-// Check if file path is provided
-const jsonFilePath = process.argv[2];
-
-if (!jsonFilePath) {
-  console.log('📖 Usage: node scripts/format-firebase-key.js path/to/your/service-account-key.json');
-  console.log('\n📋 Steps:');
-  console.log('1. Download your Firebase service account JSON file from Firebase Console');
-  console.log('2. Run this script with the path to that file');
-  console.log('3. Copy the output and use it as your environment variable');
-  process.exit(1);
-}
-
-// Check if file exists
-if (!fs.existsSync(jsonFilePath)) {
-  console.error('❌ Error: File not found:', jsonFilePath);
-  process.exit(1);
-}
-
-formatFirebaseKey(jsonFilePath);
+// Run the formatter
+formatFirebaseKey();
