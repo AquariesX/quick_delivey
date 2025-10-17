@@ -3,17 +3,23 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import DashboardLayout from '@/components/layout/DashboardLayout'
+import Dashboard from '@/components/Dashboard'
 
-export default function Home() {
-  const { user, loading } = useAuth()
+export default function DashboardPage() {
+  const { user, userData, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!loading) {
-      if (user && user.emailVerified) {
-        router.push('/dashboard')
-      } else {
+      if (!user) {
         router.push('/login')
+        return
+      }
+      
+      if (!user.emailVerified) {
+        router.push('/login')
+        return
       }
     }
   }, [user, loading, router])
@@ -26,5 +32,13 @@ export default function Home() {
     )
   }
 
-  return null
+  if (!user || !user.emailVerified || !userData) {
+    return null
+  }
+
+  return (
+    <DashboardLayout>
+      <Dashboard />
+    </DashboardLayout>
+  )
 }

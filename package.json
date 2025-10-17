@@ -6,18 +6,29 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "remove-test-users": "node scripts/remove-test-users.js",
+    "remove-all-users": "node scripts/remove-all-users.js"
   },
   "dependencies": {
+    "@prisma/client": "^6.17.1",
+    "bcryptjs": "^3.0.2",
+    "firebase": "^12.4.0",
+    "firebase-admin": "^13.5.0",
+    "framer-motion": "^12.23.24",
+    "lucide-react": "^0.545.0",
+    "next": "15.5.5",
+    "nodemailer": "^7.0.9",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "next": "15.5.5"
+    "react-hot-toast": "^2.6.0"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
     "eslint-config-next": "15.5.5",
-    "@eslint/eslintrc": "^3"
+    "prisma": "^6.17.1",
+    "tailwindcss": "^4"
   }
 }

@@ -1,0 +1,120 @@
+  // This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  SUPER_ADMIN
+  DRIVER
+  VENDOR
+  CUSTOMER
+}
+
+enum ApprovalStatus {
+  Pending
+  Approved
+  Rejected
+}
+
+enum CategoryStatus {
+  ACTIVE
+  INACTIVE
+}
+
+// Models
+model Users {
+  id                String      @id @default(cuid()) @db.VarChar(191)
+  uid               String      @unique @db.VarChar(191)
+  username          String      @db.VarChar(191)
+  email             String      @unique @db.VarChar(191)
+  phoneNumber       String      @db.VarChar(191)
+  password          String?     @db.VarChar(191)
+  role              UserRole    @default(CUSTOMER)
+  emailVerification Boolean     @default(false) @map("email_verification")
+  verificationToken String?     @map("verification_token") @db.VarChar(191)
+  passwordResetToken String?    @map("password_reset_token") @db.VarChar(191)
+  type              String?     @db.VarChar(191)
+  createdAt         DateTime    @default(now()) @map("createdAt")
+  updatedAt         DateTime    @updatedAt @map("updatedAt")
+
+  // Relations
+  productsAsVendor   Product[]   @relation("VendorProducts")
+  productsAsApprover Product[]   @relation("ApproverProducts")
+  productsAsCreator  Product[]   @relation("CreatorProducts")
+
+  @@map("users")
+}
+
+model Category {
+  id          String        @id @default(cuid()) @db.VarChar(191)
+  name        String        @db.VarChar(191)
+  code        String        @unique @db.VarChar(191)
+  description String?       @db.VarChar(191)
+  status      CategoryStatus @default(ACTIVE)
+  createdBy   String        @map("createdBy") @db.VarChar(191)
+  createdAt   DateTime      @default(now()) @map("createdAt")
+  updatedAt   DateTime      @updatedAt @map("updatedAt")
+
+  // Relations
+  subCategories SubCategory[]
+  products      Product[]
+
+  @@map("categories")
+}
+
+model SubCategory {
+  subCatId   Int      @id @default(autoincrement()) @map("sub_cat_id")
+  subCatCode String   @unique @map("sub_cat_code") @db.VarChar(50)
+  subCatName String   @map("sub_cat_name") @db.VarChar(255)
+  status     Boolean  @default(true)
+  catId      String   @map("cat_id") @db.VarChar(191)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  category Category @relation(fields: [catId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@map("sub_categories")
+}
+
+model Product {
+  proId           Int            @id @default(autoincrement()) @map("pro_id")
+  proName         String         @map("pro_name") @db.VarChar(255)
+  description     String?        @db.Text
+  catId           String         @map("cat_id") @db.VarChar(191)
+  subCatId        Int            @map("sub_cat_id")
+  price           Decimal        @db.Decimal(10, 2)
+  cost            Decimal        @db.Decimal(10, 2)
+  discount        Decimal        @default(0) @db.Decimal(5, 2)
+  sku             String         @unique @db.VarChar(100)
+  barcode         String?        @unique @db.VarChar(100)
+  qnty            Int            @default(0)
+  stock           Int            @default(0)
+  proImages       Json?          @map("pro_images")
+  vendorId        String         @map("vendor_id") @db.VarChar(191)
+  status          Boolean        @default(true)
+  approvalStatus  ApprovalStatus @default(Pending) @map("approval_status")
+  approveById     String?        @map("approve_by") @db.VarChar(191)
+  createdById     String         @map("created_by") @db.VarChar(191)
+  createdAt       DateTime       @default(now()) @map("created_at")
+  updatedAt       DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  category   Category   @relation(fields: [catId], references: [id], onDelete: Cascade)
+  subCategory SubCategory @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
+  vendor     Users      @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
+  approver   Users?     @relation("ApproverProducts", fields: [approveById], references: [uid], onDelete: SetNull)
+  creator    Users      @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
+
+  @@map("products")
+}
