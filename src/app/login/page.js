@@ -20,8 +20,14 @@ export default function LoginPage() {
     return null
   }
 
-  // Show email verification if user exists but not verified
-  if (user && !user.emailVerified) {
+  // If user exists but no userData, they might be in an invalid state
+  // This can happen if Firebase user exists but database user doesn't
+  if (user && !userData && !loading) {
+    console.log('User exists but no userData found, showing login form')
+  }
+
+  // Show email verification if user exists but not verified AND userData exists
+  if (user && !user.emailVerified && userData) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
         {/* Background Animation */}
@@ -53,7 +59,35 @@ export default function LoginPage() {
         </div>
 
         <div className="relative z-10 w-full max-w-md">
-          <EmailVerification />
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Email Verification Required</h2>
+              <p className="text-gray-600">Please verify your email to continue</p>
+            </div>
+            
+            <EmailVerification />
+            
+            <div className="mt-6 text-center">
+              <p className="text-gray-500 text-sm mb-3">Having trouble?</p>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  // Sign out the user and refresh the page
+                  import('@/lib/firebase').then(({ auth }) => {
+                    import('firebase/auth').then(({ signOut }) => {
+                      signOut(auth).then(() => {
+                        window.location.reload()
+                      })
+                    })
+                  })
+                }}
+                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
+              >
+                Sign out and try again
+              </motion.button>
+            </div>
+          </div>
         </div>
       </div>
     )
