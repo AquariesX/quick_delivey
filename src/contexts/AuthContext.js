@@ -28,8 +28,13 @@ export default function AuthContextProvider({ children }) {
       console.log('Fetching user data for UID:', firebaseUser.uid)
       
       const response = await fetch(`/api/users?uid=${firebaseUser.uid}`)
-      const result = await response.json()
       
+      if (!response.ok) {
+        console.error('API response not ok:', response.status, response.statusText)
+        return null
+      }
+      
+      const result = await response.json()
       console.log('Fetch user data result:', result)
       
       if (result.success) {
@@ -44,6 +49,7 @@ export default function AuthContextProvider({ children }) {
       }
     } catch (error) {
       console.error('Error fetching user data:', error)
+      console.error('Error details:', error.message)
       return null
     }
   }

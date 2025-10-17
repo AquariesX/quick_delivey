@@ -2,8 +2,6 @@
 
 import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { auth } from '@/lib/firebase'
-import { applyActionCode, checkActionCode } from 'firebase/auth'
 import { motion } from 'framer-motion'
 import { CheckCircle, XCircle, Loader2, Mail } from 'lucide-react'
 
@@ -28,48 +26,38 @@ function VerifyEmailContent() {
 
         console.log('Verifying email with oobCode:', oobCode)
 
-        // Check if the action code is valid
-        console.log('Checking action code validity...')
-        await checkActionCode(auth, oobCode)
-        
-        // Apply the action code (verify the email)
-        console.log('Applying action code...')
-        await applyActionCode(auth, oobCode)
-        
-        console.log('Email verification successful!')
-        setStatus('success')
-        setMessage('Email verified successfully!')
-        
-        // Redirect to login page after 3 seconds
-        setTimeout(() => {
-          router.push('/login')
-        }, 3000)
+        // Use server-side verification via API
+        const response = await fetch('/api/auth/verify-email', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ oobCode })
+        })
+
+        const result = await response.json()
+
+        if (result.success) {
+          console.log('Email verification successful!')
+          setStatus('success')
+          setMessage('Email verified successfully!')
+          
+          // Redirect to login page after 3 seconds
+          setTimeout(() => {
+            router.push('/login')
+          }, 3000)
+        } else {
+          console.error('Email verification failed:', result.error)
+          setStatus('error')
+          setMessage('Email verification failed')
+          setError(result.error)
+        }
         
       } catch (error) {
         console.error('Email verification error:', error)
         setStatus('error')
-        
-        switch (error.code) {
-          case 'auth/invalid-action-code':
-            setMessage('Invalid verification link')
-            setError('This verification link is invalid or has expired')
-            break
-          case 'auth/expired-action-code':
-            setMessage('Verification link expired')
-            setError('This verification link has expired. Please request a new one')
-            break
-          case 'auth/user-disabled':
-            setMessage('Account disabled')
-            setError('This account has been disabled')
-            break
-          case 'auth/user-not-found':
-            setMessage('User not found')
-            setError('No user found with this email')
-            break
-          default:
-            setMessage('Verification failed')
-            setError(error.message || 'An error occurred during verification')
-        }
+        setMessage('Verification failed')
+        setError('Network error occurred during verification.')
       }
     }
 

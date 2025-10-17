@@ -2,6 +2,17 @@ import nodemailer from 'nodemailer'
 
 // Create transporter for sending emails
 const createTransporter = () => {
+  console.log('Creating email transporter with config:', {
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: process.env.SMTP_PORT || 587,
+    user: process.env.SMTP_USER ? '***' : 'NOT_SET',
+    pass: process.env.SMTP_PASS ? '***' : 'NOT_SET'
+  })
+  
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error('SMTP credentials not configured. Please set SMTP_USER and SMTP_PASS environment variables.')
+  }
+  
   return nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: process.env.SMTP_PORT || 587,
