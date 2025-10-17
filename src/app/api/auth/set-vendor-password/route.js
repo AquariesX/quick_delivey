@@ -24,8 +24,7 @@ export async function POST(request) {
     const user = await prisma.users.findFirst({
       where: {
         email: decodedEmail,
-        emailVerification: true,
-        password: null // User doesn't have password yet
+        emailVerification: true
       }
     })
 
@@ -38,7 +37,55 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Create Firebase user
+    // Check if user already has a password (direct registration case)
+    if (user.password) {
+      // User already has password, just update Firebase user
+      let firebaseUser
+      try {
+        firebaseUser = await adminAuth.getUserByEmail(decodedEmail)
+        console.log('Found existing Firebase user:', firebaseUser.uid)
+        
+        // Update the existing Firebase user's password
+        await adminAuth.updateUser(firebaseUser.uid, {
+          password: password,
+          displayName: username || user.username,
+          emailVerified: true
+        })
+        console.log('Updated existing Firebase user password')
+        
+        // Update database user
+        const updatedUser = await prisma.users.update({
+          where: { id: user.id },
+          data: {
+            uid: firebaseUser.uid, // Ensure UID is set
+            username: username || user.username,
+            phoneNumber: phoneNumber || user.phoneNumber
+          }
+        })
+        
+        return Response.json({ 
+          success: true,
+          message: 'Password updated successfully! You can now login to your account.',
+          user: {
+            id: updatedUser.id,
+            uid: updatedUser.uid,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            phoneNumber: updatedUser.phoneNumber,
+            role: updatedUser.role,
+            emailVerification: updatedUser.emailVerification
+          }
+        })
+      } catch (firebaseError) {
+        console.error('Error updating Firebase user:', firebaseError.message)
+        return Response.json({ 
+          success: false, 
+          error: 'Failed to update user in Firebase Authentication' 
+        }, { status: 500 })
+      }
+    }
+
+    // Create Firebase user for admin-invited vendors
     let firebaseUser
     try {
       firebaseUser = await adminAuth.createUser({

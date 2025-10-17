@@ -57,16 +57,57 @@ const RegisterForm = () => {
     
     try {
       console.log('Submitting registration with data:', formData)
-      await signUp(
-        formData.email, 
-        formData.password, 
-        formData.username, 
-        formData.phoneNumber,
-        formData.role,
-        formData.type
-      )
+      
+      // Handle vendor registration differently
+      if (formData.role === 'VENDOR') {
+        // For vendors, create user in database first (like admin-invited vendors)
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username: formData.username.trim(),
+            email: formData.email.trim().toLowerCase(),
+            phoneNumber: formData.phoneNumber.trim(),
+            uid: null, // Will be set when vendor sets password
+            role: 'VENDOR',
+            password: formData.password, // Include password for direct vendor registration
+            type: formData.type || 'firebase'
+          })
+        })
+        
+        const result = await response.json()
+        
+        if (result.success) {
+          alert('Vendor account created successfully! Please check your email for verification.')
+          // Reset form
+          setFormData({
+            username: '',
+            email: '',
+            phoneNumber: '',
+            role: '',
+            type: '',
+            password: '',
+            confirmPassword: ''
+          })
+        } else {
+          alert(result.error || 'Failed to create vendor account')
+        }
+      } else {
+        // For non-vendors, use normal Firebase registration
+        await signUp(
+          formData.email, 
+          formData.password, 
+          formData.username, 
+          formData.phoneNumber,
+          formData.role,
+          formData.type
+        )
+      }
     } catch (error) {
       console.error('Registration error:', error)
+      alert('Registration failed. Please try again.')
     } finally {
       setIsLoading(false)
     }

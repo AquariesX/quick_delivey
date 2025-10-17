@@ -47,10 +47,13 @@ export async function POST(request) {
       })
     }
 
-    // Check if user already exists by UID (for updates)
-    const existingUserByUID = await prisma.users.findUnique({
-      where: { uid }
-    })
+    // Check if user already exists by UID (for updates) - only if UID is provided
+    let existingUserByUID = null
+    if (uid) {
+      existingUserByUID = await prisma.users.findUnique({
+        where: { uid }
+      })
+    }
 
     if (existingUserByUID) {
       // Validate and convert role to enum
@@ -88,6 +91,10 @@ export async function POST(request) {
       verificationToken = crypto.randomBytes(32).toString('hex')
     } else if (password) {
       hashedPassword = await bcrypt.hash(password, 12)
+      // For direct vendor registration with password, also generate verification token
+      if (role === 'VENDOR') {
+        verificationToken = crypto.randomBytes(32).toString('hex')
+      }
     }
 
     // Create new user
@@ -105,8 +112,8 @@ export async function POST(request) {
       }
     })
 
-    // Send invitation email if requested
-    if (sendInvitationEmail && role === 'VENDOR' && verificationToken) {
+    // Send invitation email if requested or for direct vendor registration
+    if ((sendInvitationEmail || (role === 'VENDOR' && password)) && role === 'VENDOR' && verificationToken) {
       try {
         // Try the full HTML email first
         const emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
@@ -116,7 +123,7 @@ export async function POST(request) {
           await sendTestEmail(
             email, 
             'Welcome to Quick Delivery - Vendor Account Created',
-            `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and set your password:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
+            `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and set your password:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
           )
         }
       } catch (emailError) {
@@ -144,12 +151,39 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
     const uid = searchParams.get('uid')
+    const email = searchParams.get('email')
     const role = searchParams.get('role')
 
     if (uid) {
       // Fetch specific user by UID
       const user = await prisma.users.findUnique({
         where: { uid },
+        include: {
+          productsAsVendor: {
+            include: {
+              category: true,
+              subCategory: true
+            }
+          }
+        }
+      })
+
+      if (!user) {
+        return Response.json({ 
+          success: false, 
+          error: 'User not found',
+          code: 'USER_NOT_FOUND'
+        }, { status: 404 })
+      }
+
+      return Response.json({ 
+        success: true, 
+        user 
+      })
+    } else if (email) {
+      // Fetch specific user by email
+      const user = await prisma.users.findUnique({
+        where: { email },
         include: {
           productsAsVendor: {
             include: {
