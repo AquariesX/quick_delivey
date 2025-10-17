@@ -20,11 +20,9 @@ function VerifyEmailContent() {
         if (!oobCode) {
           setStatus('error')
           setMessage('Invalid verification link')
-          setError('No verification code found in the URL')
+          setError('No verification code found in the URL. Please check your email for the correct verification link.')
           return
         }
-
-        console.log('Verifying email with oobCode:', oobCode)
 
         // Use server-side verification via API
         const response = await fetch('/api/auth/verify-email', {
@@ -38,7 +36,6 @@ function VerifyEmailContent() {
         const result = await response.json()
 
         if (result.success) {
-          console.log('Email verification successful!')
           setStatus('success')
           setMessage('Email verified successfully!')
           
@@ -47,17 +44,16 @@ function VerifyEmailContent() {
             router.push('/login')
           }, 3000)
         } else {
-          console.error('Email verification failed:', result.error)
           setStatus('error')
           setMessage('Email verification failed')
-          setError(result.error)
+          setError(result.error || 'Unknown error occurred')
         }
         
       } catch (error) {
-        console.error('Email verification error:', error)
+        console.error('Email verification error:', error.message)
         setStatus('error')
         setMessage('Verification failed')
-        setError('Network error occurred during verification.')
+        setError('Network error occurred during verification. Please check your internet connection and try again.')
       }
     }
 

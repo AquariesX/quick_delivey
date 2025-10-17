@@ -21,35 +21,34 @@ export default function AuthContextProvider({ children }) {
   const [userData, setUserData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [emailVerificationSent, setEmailVerificationSent] = useState(false)
+  const [userDataLoadingTimeout, setUserDataLoadingTimeout] = useState(false)
 
   // Fetch user data from database
   const fetchUserData = async (firebaseUser) => {
     try {
-      console.log('Fetching user data for UID:', firebaseUser.uid)
-      
       const response = await fetch(`/api/users?uid=${firebaseUser.uid}`)
       
       if (!response.ok) {
-        console.error('API response not ok:', response.status, response.statusText)
+        if (response.status === 404) {
+          // User not found is normal for new users
+          return null
+        }
+        console.error('Failed to fetch user data:', response.status, response.statusText)
         return null
       }
       
       const result = await response.json()
-      console.log('Fetch user data result:', result)
       
       if (result.success) {
         return result.user
-      } else if (response.status === 404 || result.code === 'USER_NOT_FOUND') {
-        // User not found is a normal case, not an error
-        console.log('User not found in database (this is normal for new users)')
+      } else if (result.code === 'USER_NOT_FOUND') {
         return null
       } else {
         console.error('Failed to fetch user data:', result.error)
         return null
       }
     } catch (error) {
-      console.error('Error fetching user data:', error)
-      console.error('Error details:', error.message)
+      console.error('Error fetching user data:', error.message)
       return null
     }
   }
@@ -57,15 +56,6 @@ export default function AuthContextProvider({ children }) {
   // Create user in database
   const createUserInDatabase = async (firebaseUser, username, phoneNumber, role, type) => {
     try {
-      console.log('Creating user in database:', { 
-        uid: firebaseUser.uid, 
-        username, 
-        email: firebaseUser.email, 
-        phoneNumber, 
-        role, 
-        type 
-      })
-
       const response = await fetch('/api/users', {
         method: 'POST',
         headers: {
@@ -82,16 +72,24 @@ export default function AuthContextProvider({ children }) {
       })
       
       const result = await response.json()
-      console.log('Database creation result:', result)
       
       if (result.success) {
         return result.user
       } else {
         console.error('Failed to create user:', result.error)
+        
+        // If it's a duplicate user error, try to fetch the existing user
+        if (result.code === 'USER_ALREADY_EXISTS' || result.error.includes('already exists')) {
+          const existingUser = await fetchUserData(firebaseUser)
+          if (existingUser) {
+            return existingUser
+          }
+        }
+        
         return null
       }
     } catch (error) {
-      console.error('Error creating user:', error)
+      console.error('Error creating user:', error.message)
       return null
     }
   }
@@ -120,36 +118,94 @@ export default function AuthContextProvider({ children }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      console.log('Auth state changed:', firebaseUser)
-      
       if (firebaseUser) {
         setUser(firebaseUser)
         
-        // Fetch user data from database
-        const dbUser = await fetchUserData(firebaseUser)
-        console.log('Setting userData:', dbUser)
+        // Set a timeout for user data loading
+        const userDataTimeout = setTimeout(() => {
+          setUserDataLoadingTimeout(true)
+        }, 10000) // 10 second timeout
         
-        if (dbUser) {
-          setUserData(dbUser)
-        } else {
-          console.log('User not found in database - this should not happen for registered users')
+        try {
+          // Fetch user data from database with retry logic
+          let dbUser = null
+          let fetchRetries = 3
+          
+          while (fetchRetries > 0 && !dbUser) {
+            try {
+              dbUser = await fetchUserData(firebaseUser)
+              if (dbUser) {
+                setUserData(dbUser)
+                break
+              }
+            } catch (fetchError) {
+              if (fetchRetries > 1) {
+                await new Promise(resolve => setTimeout(resolve, 1000))
+                fetchRetries--
+                continue
+              }
+              throw fetchError
+            }
+          }
+          
+          clearTimeout(userDataTimeout)
+          
+          if (!dbUser) {
+            // Try to create the user in the database as a fallback
+            try {
+              const fallbackUser = await createUserInDatabase(
+                firebaseUser, 
+                firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'User',
+                firebaseUser.phoneNumber || '',
+                'CUSTOMER', // Default role
+                'firebase'
+              )
+              
+              if (fallbackUser) {
+                setUserData(fallbackUser)
+              } else {
+                // Try to fetch the user again in case it was created but not returned
+                setTimeout(async () => {
+                  try {
+                    const retryUser = await fetchUserData(firebaseUser)
+                    if (retryUser) {
+                      setUserData(retryUser)
+                    } else {
+                      setUserData(null)
+                    }
+                  } catch (retryError) {
+                    console.error('Error on retry fetch:', retryError)
+                    setUserData(null)
+                  }
+                }, 2000) // Wait 2 seconds before retry
+              }
+            } catch (error) {
+              console.error('Error creating fallback user:', error.message)
+              setUserData(null)
+            }
+          }
+          
+          // Update email verification status if needed
+          if (firebaseUser.emailVerified && dbUser && !dbUser.emailVerification) {
+            await updateEmailVerification(firebaseUser.uid, true)
+            setUserData(prev => prev ? { ...prev, emailVerification: true } : null)
+          }
+          
+          if (!firebaseUser.emailVerified && !emailVerificationSent) {
+            setEmailVerificationSent(false)
+          }
+        } catch (error) {
+          console.error('Error in auth state change handler:', error.message)
+          clearTimeout(userDataTimeout)
           setUserData(null)
-        }
-        
-        // Update email verification status if needed
-        if (firebaseUser.emailVerified && dbUser && !dbUser.emailVerification) {
-          await updateEmailVerification(firebaseUser.uid, true)
-          setUserData(prev => prev ? { ...prev, emailVerification: true } : null)
-        }
-        
-        if (!firebaseUser.emailVerified && !emailVerificationSent) {
-          setEmailVerificationSent(false)
         }
       } else {
         setUser(null)
         setUserData(null)
         setEmailVerificationSent(false)
+        setUserDataLoadingTimeout(false)
       }
+      
       setLoading(false)
     })
 
@@ -193,12 +249,26 @@ export default function AuthContextProvider({ children }) {
         // Continue even if profile update fails
       }
 
-      // Create user in database
-      console.log('Creating user in database with signUp data:', { username, phoneNumber, role, type })
-      const dbUser = await createUserInDatabase(user, username, phoneNumber, role, type)
-      console.log('Database user created in signUp:', dbUser)
-      if (dbUser) {
-        setUserData(dbUser)
+      // Create user in database with retry logic
+      let dbUser = null
+      let dbRetries = 3
+      
+      while (dbRetries > 0 && !dbUser) {
+        try {
+          dbUser = await createUserInDatabase(user, username, phoneNumber, role, type)
+          
+          if (dbUser) {
+            setUserData(dbUser)
+            break
+          }
+        } catch (dbError) {
+          if (dbRetries > 1) {
+            await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second before retry
+            dbRetries--
+            continue
+          }
+          throw dbError
+        }
       }
 
       // Send email verification with retry logic
@@ -213,12 +283,11 @@ export default function AuthContextProvider({ children }) {
           toast.success('Registration successful! Please check your email for verification.')
         } catch (error) {
           if (error.code === 'auth/network-request-failed' && retries > 1) {
-            console.log(`Email verification retry... (${retries - 1} attempts left)`)
             await new Promise(resolve => setTimeout(resolve, 2000))
             retries--
             continue
           }
-          console.error('Email verification failed:', error)
+          console.error('Email verification failed:', error.message)
           toast.error('Registration successful but email verification failed. You can resend it later.')
           break
         }
@@ -278,7 +347,6 @@ export default function AuthContextProvider({ children }) {
             verificationSent = true
           } catch (error) {
             if (error.code === 'auth/network-request-failed' && retries > 1) {
-              console.log(`Email verification retry... (${retries - 1} attempts left)`)
               await new Promise(resolve => setTimeout(resolve, 2000))
               retries--
               continue
@@ -292,7 +360,7 @@ export default function AuthContextProvider({ children }) {
         }
       }
     } catch (error) {
-      console.error('Resend verification error:', error)
+      console.error('Resend verification error:', error.message)
       toast.error(getErrorMessage(error.code))
       throw error
     }
@@ -328,6 +396,7 @@ export default function AuthContextProvider({ children }) {
     userData,
     loading,
     emailVerificationSent,
+    userDataLoadingTimeout,
     signUp,
     signIn,
     logout,

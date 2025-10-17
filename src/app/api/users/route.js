@@ -8,20 +8,43 @@ export async function POST(request) {
   try {
     const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail } = await request.json()
 
-    console.log('Creating user with data:', { uid, username, email, phoneNumber, role, type, sendInvitationEmail })
+    // Validate required fields
+    if (!uid) {
+      return Response.json({ 
+        success: false, 
+        error: 'UID is required',
+        code: 'MISSING_UID'
+      }, { status: 400 })
+    }
+
+    if (!email) {
+      return Response.json({ 
+        success: false, 
+        error: 'Email is required',
+        code: 'MISSING_EMAIL'
+      }, { status: 400 })
+    }
 
     // Check if user already exists by email (prevent duplicates)
     const existingUserByEmail = await prisma.users.findUnique({
       where: { email }
     })
 
-    if (existingUserByEmail) {
-      console.log('User already exists with this email:', existingUserByEmail)
+    if (existingUserByEmail && existingUserByEmail.uid !== uid) {
+      // Update the existing user's UID to match the new Firebase UID
+      const updatedUser = await prisma.users.update({
+        where: { id: existingUserByEmail.id },
+        data: {
+          uid: uid, // Update UID to match Firebase
+          emailVerification: true // Mark as verified since they're logging in
+        }
+      })
+      
       return Response.json({ 
-        success: false, 
-        error: `A user with email "${email}" already exists. Please use a different email address.`,
-        code: 'EMAIL_ALREADY_EXISTS'
-      }, { status: 400 })
+        success: true, 
+        user: updatedUser,
+        message: 'User UID updated to match Firebase authentication' 
+      })
     }
 
     // Check if user already exists by UID (for updates)
@@ -30,8 +53,6 @@ export async function POST(request) {
     })
 
     if (existingUserByUID) {
-      console.log('User already exists with this UID:', existingUserByUID)
-      
       // Validate and convert role to enum
       const validRoles = ['ADMIN', 'SUPER_ADMIN', 'DRIVER', 'VENDOR', 'CUSTOMER']
       const userRole = validRoles.includes(role) ? role : existingUserByUID.role
@@ -48,8 +69,6 @@ export async function POST(request) {
         }
       })
       
-      console.log('Updated existing user:', updatedUser)
-      
       return Response.json({ 
         success: true, 
         user: updatedUser,
@@ -60,8 +79,6 @@ export async function POST(request) {
     // Validate and convert role to enum
     const validRoles = ['ADMIN', 'SUPER_ADMIN', 'DRIVER', 'VENDOR', 'CUSTOMER']
     const userRole = validRoles.includes(role) ? role : 'CUSTOMER'
-
-    console.log('Creating user with role:', userRole)
 
     // Generate verification token if sending invitation email
     let verificationToken = null
@@ -88,24 +105,19 @@ export async function POST(request) {
       }
     })
 
-    console.log('User created successfully:', user)
-
     // Send invitation email if requested
     if (sendInvitationEmail && role === 'VENDOR' && verificationToken) {
       try {
         // Try the full HTML email first
         const emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
-        console.log('Invitation email sent:', emailResult)
         
         // If that fails, try a simple email
         if (!emailResult.success) {
-          console.log('Trying simple email fallback...')
-          const simpleEmailResult = await sendTestEmail(
+          await sendTestEmail(
             email, 
             'Welcome to Quick Delivery - Vendor Account Created',
             `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and set your password:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
           )
-          console.log('Simple email result:', simpleEmailResult)
         }
       } catch (emailError) {
         console.error('Error sending invitation email:', emailError)
@@ -119,10 +131,11 @@ export async function POST(request) {
       message: sendInvitationEmail ? 'User created successfully and invitation email sent' : 'User created successfully' 
     })
   } catch (error) {
-    console.error('Error creating user:', error)
+    console.error('Error creating user:', error.message)
     return Response.json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      code: 'USER_CREATION_ERROR'
     }, { status: 500 })
   }
 }
@@ -132,8 +145,6 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url)
     const uid = searchParams.get('uid')
     const role = searchParams.get('role')
-
-    console.log('Fetching users with params:', { uid, role })
 
     if (uid) {
       // Fetch specific user by UID
@@ -148,8 +159,6 @@ export async function GET(request) {
           }
         }
       })
-
-      console.log('Found user:', user)
 
       if (!user) {
         return Response.json({ 
@@ -202,10 +211,11 @@ export async function GET(request) {
       })
     }
   } catch (error) {
-    console.error('Error fetching users:', error)
+    console.error('Error fetching users:', error.message)
     return Response.json({ 
       success: false, 
-      error: error.message 
+      error: error.message,
+      code: 'SERVER_ERROR'
     }, { status: 500 })
   }
 }

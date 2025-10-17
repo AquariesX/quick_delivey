@@ -29,9 +29,7 @@ export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : nul
 
 // Connect to emulators in development (optional)
 if (process.env.NODE_ENV === 'development' && typeof window !== 'undefined') {
-  // Uncomment these lines if you want to use Firebase emulators
-  // connectAuthEmulator(auth, "http://localhost:9099");
-  // connectFirestoreEmulator(db, 'localhost', 8080);
+
 }
 
 export default app;

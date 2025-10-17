@@ -25,8 +25,6 @@ export async function POST(request) {
         email: actionCodeInfo.data.email
       })
     } catch (error) {
-      console.error('Firebase Admin verification error:', error)
-      
       let errorMessage = 'Email verification failed'
       switch (error.code) {
         case 'auth/invalid-action-code':
@@ -38,17 +36,24 @@ export async function POST(request) {
         case 'auth/user-disabled':
           errorMessage = 'User account has been disabled'
           break
+        case 'auth/invalid-continue-uri':
+          errorMessage = 'Invalid continue URL'
+          break
+        case 'auth/missing-continue-uri':
+          errorMessage = 'Missing continue URL'
+          break
         default:
           errorMessage = error.message || 'Email verification failed'
       }
       
       return NextResponse.json({
         success: false,
-        error: errorMessage
+        error: errorMessage,
+        code: error.code
       }, { status: 400 })
     }
   } catch (error) {
-    console.error('Server error:', error)
+    console.error('Server error:', error.message)
     return NextResponse.json({
       success: false,
       error: 'Server error occurred'
