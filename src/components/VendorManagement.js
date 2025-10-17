@@ -189,7 +189,7 @@ const VendorManagement = () => {
           username: formData.username.trim(),
           email: formData.email.trim().toLowerCase(),
           phoneNumber: formData.phoneNumber.trim(),
-          uid: `vendor_${Date.now()}`, // Generate temporary UID
+          uid: null, // Will be set when vendor sets password
           role: 'VENDOR',
           sendInvitationEmail: true // Always send invitation email
         })
@@ -729,7 +729,7 @@ const VendorManagement = () => {
                     value={formData.username}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter username"
                   />
                 </div>
@@ -744,7 +744,7 @@ const VendorManagement = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter email"
                   />
                 </div>
@@ -759,7 +759,7 @@ const VendorManagement = () => {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -848,7 +848,7 @@ const VendorManagement = () => {
                     value={formData.username}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter username"
                   />
                 </div>
@@ -863,7 +863,7 @@ const VendorManagement = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter email"
                   />
                 </div>
@@ -878,7 +878,7 @@ const VendorManagement = () => {
                     value={formData.phoneNumber}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                     placeholder="Enter phone number"
                   />
                 </div>

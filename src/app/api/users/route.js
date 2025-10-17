@@ -9,7 +9,7 @@ export async function POST(request) {
     const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail } = await request.json()
 
     // Validate required fields
-    if (!uid) {
+    if (!uid && role !== 'VENDOR') {
       return Response.json({ 
         success: false, 
         error: 'UID is required',
@@ -93,7 +93,7 @@ export async function POST(request) {
     // Create new user
     const user = await prisma.users.create({
       data: {
-        uid,
+        uid: uid || `temp_${Date.now()}`, // Use temp UID for vendors, will be updated when they set password
         username,
         email,
         phoneNumber,

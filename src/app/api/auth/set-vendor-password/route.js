@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { adminAuth } from '@/lib/firebase-admin'
 import bcrypt from 'bcryptjs'
 
 // Set vendor password after email verification (step 2)
@@ -37,20 +38,63 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Hash the password
+    // Create Firebase user
+    let firebaseUser
+    try {
+      firebaseUser = await adminAuth.createUser({
+        email: decodedEmail,
+        password: password,
+        displayName: username || user.username,
+        emailVerified: true, // Mark as verified since they went through email verification
+        disabled: false
+      })
+      console.log('Firebase user created:', firebaseUser.uid)
+    } catch (firebaseError) {
+      console.error('Error creating Firebase user:', firebaseError.message)
+      
+      // If user already exists in Firebase, try to get the existing user
+      if (firebaseError.code === 'auth/email-already-exists') {
+        try {
+          firebaseUser = await adminAuth.getUserByEmail(decodedEmail)
+          console.log('Found existing Firebase user:', firebaseUser.uid)
+          
+          // Update the existing Firebase user's password
+          await adminAuth.updateUser(firebaseUser.uid, {
+            password: password,
+            displayName: username || user.username,
+            emailVerified: true
+          })
+          console.log('Updated existing Firebase user password')
+        } catch (updateError) {
+          console.error('Error updating existing Firebase user:', updateError.message)
+          return Response.json({ 
+            success: false, 
+            error: 'Failed to update existing user in Firebase' 
+          }, { status: 500 })
+        }
+      } else {
+        return Response.json({ 
+          success: false, 
+          error: 'Failed to create user in Firebase Authentication' 
+        }, { status: 500 })
+      }
+    }
+
+    // Hash the password for database storage
     const hashedPassword = await bcrypt.hash(password, 12)
 
-    // Update user with password
+    // Update user with password and Firebase UID
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
+        uid: firebaseUser.uid, // Update with real Firebase UID
         password: hashedPassword,
         username: username || user.username,
         phoneNumber: phoneNumber || user.phoneNumber
       }
     })
 
-    console.log('Password set successfully for user:', updatedUser.email)
+    console.log('Password set successfully for user:', updatedUser.email, 'Firebase UID:', firebaseUser.uid)
 
     return Response.json({ 
       success: true, 

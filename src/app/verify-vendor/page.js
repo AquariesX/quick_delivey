@@ -212,7 +212,7 @@ function VerifyVendorContent() {
               value={formData.username}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               placeholder="Enter username"
             />
           </div>
@@ -230,7 +230,7 @@ function VerifyVendorContent() {
               value={formData.email}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               placeholder="Enter email"
             />
           </div>
@@ -248,7 +248,7 @@ function VerifyVendorContent() {
               value={formData.phoneNumber}
               onChange={handleInputChange}
               required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
               placeholder="Enter phone number"
             />
           </div>

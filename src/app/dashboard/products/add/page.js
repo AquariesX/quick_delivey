@@ -312,7 +312,7 @@ const AddProductPage = () => {
                     type="text"
                     value={formData.proName}
                     onChange={(e) => handleInputChange('proName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-gray-900 transition-colors ${
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors ${
                       errors.proName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     placeholder="Enter product name"
