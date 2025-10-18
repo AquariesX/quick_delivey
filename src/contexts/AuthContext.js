@@ -67,7 +67,8 @@ export default function AuthContextProvider({ children }) {
           email: firebaseUser.email,
           phoneNumber,
           role,
-          type
+          type,
+          generateVerificationToken: true // Always generate verification token
         })
       })
       

@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkUserVerification } from '@/lib/authHelpers'
 
 export default function Home() {
   const { user, userData, loading } = useAuth()
@@ -11,11 +12,9 @@ export default function Home() {
   useEffect(() => {
     if (!loading) {
       if (user && userData) {
-        // Check verification status based on user role
-        const userRole = userData?.role || 'CUSTOMER'
-        const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+        const verification = checkUserVerification(user, userData)
         
-        if (isVerified) {
+        if (verification.isVerified) {
           router.push('/dashboard')
         } else {
           router.push('/login')

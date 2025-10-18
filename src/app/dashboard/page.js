@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkUserVerification } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import Dashboard from '@/components/Dashboard'
 
@@ -12,23 +13,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (!user) {
+      const verification = checkUserVerification(user, userData)
+      
+      if (!verification.isVerified) {
         router.push('/login')
         return
-      }
-      
-      // For vendors, check database verification status
-      if (userData && userData.role === 'VENDOR') {
-        if (!userData.emailVerification) {
-          router.push('/login')
-          return
-        }
-      } else {
-        // For non-vendors, check Firebase email verification
-        if (!user.emailVerified) {
-          router.push('/login')
-          return
-        }
       }
     }
   }, [user, userData, loading, router])
@@ -41,7 +30,9 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user || (!userData?.emailVerification && userData?.role === 'VENDOR') || (!user.emailVerified && userData?.role !== 'VENDOR')) {
+  const verification = checkUserVerification(user, userData)
+  
+  if (!verification.isVerified) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">

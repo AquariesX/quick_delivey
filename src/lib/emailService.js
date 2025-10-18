@@ -29,7 +29,7 @@ export const sendVendorInvitationEmail = async (vendorEmail, vendorUsername, ver
   try {
     const transporter = createTransporter()
     
-    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(vendorEmail)}`
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(vendorEmail)}&role=VENDOR`
     
     const mailOptions = {
       from: `"${process.env.APP_NAME || 'Quick Delivery'}" <${process.env.SMTP_USER}>`,
@@ -172,6 +172,68 @@ export const sendPasswordResetEmail = async (userEmail, username, resetToken) =>
     return { success: true, messageId: result.messageId }
   } catch (error) {
     console.error('Error sending password reset email:', error)
+    return { success: false, error: error.message }
+  }
+}
+
+// Send general verification email for all user types
+export const sendVerificationEmail = async (email, username, verificationToken, role = 'USER') => {
+  try {
+    const transporter = createTransporter()
+    
+    const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(email)}&role=${role}`
+    
+    const mailOptions = {
+      from: `"${process.env.APP_NAME || 'Quick Delivery'}" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: 'Verify Your Email - Quick Delivery',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Verify Your Email</h1>
+            <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Quick Delivery System</p>
+          </div>
+          
+          <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+            <h2 style="color: #333; margin-top: 0;">Hello ${username}!</h2>
+            
+            <p style="color: #666; line-height: 1.6;">
+              Thank you for registering with Quick Delivery! Please verify your email address to activate your account.
+            </p>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${verificationUrl}" 
+                 style="background: #667eea; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;">
+                Verify Email Address
+              </a>
+            </div>
+            
+            <p style="color: #666; line-height: 1.6; font-size: 14px;">
+              If the button doesn't work, copy and paste this link into your browser:<br>
+              <a href="${verificationUrl}" style="color: #667eea;">${verificationUrl}</a>
+            </p>
+            
+            <p style="color: #666; line-height: 1.6; font-size: 14px;">
+              This verification link will expire in 24 hours. If you didn't create an account, please ignore this email.
+            </p>
+            
+            <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+            
+            <p style="color: #999; font-size: 12px; text-align: center;">
+              Best regards,<br>
+              Quick Delivery Team
+            </p>
+          </div>
+        </div>
+      `
+    }
+
+    const result = await transporter.sendMail(mailOptions)
+    console.log('Verification email sent successfully:', result.messageId)
+    
+    return { success: true, messageId: result.messageId }
+  } catch (error) {
+    console.error('Error sending verification email:', error)
     return { success: false, error: error.message }
   }
 }

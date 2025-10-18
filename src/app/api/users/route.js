@@ -1,12 +1,12 @@
 import { prisma } from '@/lib/prisma'
-import { sendVendorInvitationEmail } from '@/lib/emailService'
+import { sendVendorInvitationEmail, sendVerificationEmail } from '@/lib/emailService'
 import { sendTestEmail } from '@/lib/simpleEmail'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
 export async function POST(request) {
   try {
-    const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail } = await request.json()
+    const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail, generateVerificationToken } = await request.json()
 
     // Validate required fields
     if (!uid && role !== 'VENDOR') {
@@ -83,7 +83,7 @@ export async function POST(request) {
     const validRoles = ['ADMIN', 'SUPER_ADMIN', 'DRIVER', 'VENDOR', 'CUSTOMER']
     const userRole = validRoles.includes(role) ? role : 'CUSTOMER'
 
-    // Generate verification token if sending invitation email
+    // Generate verification token based on requirements
     let verificationToken = null
     let hashedPassword = null
     
@@ -94,10 +94,13 @@ export async function POST(request) {
       verificationToken = crypto.randomBytes(32).toString('hex')
     } else if (password) {
       hashedPassword = await bcrypt.hash(password, 12)
-      // For direct vendor registration with password, also generate verification token
-      if (role === 'VENDOR') {
+      // Generate verification token for all users with passwords (except auto-verified)
+      if (role === 'VENDOR' || generateVerificationToken) {
         verificationToken = crypto.randomBytes(32).toString('hex')
       }
+    } else if (generateVerificationToken) {
+      // Generate verification token for users without passwords
+      verificationToken = crypto.randomBytes(32).toString('hex')
     }
 
     // Create new user
@@ -110,27 +113,35 @@ export async function POST(request) {
         password: hashedPassword,
         role: userRole,
         type: type || 'firebase',
-        emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password ? true : false), // Auto-verify admin-created vendors
+        emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password && !generateVerificationToken ? true : false), // Auto-verify admin-created vendors and users without verification tokens
         verificationToken: verificationToken
       }
     })
 
-    // Send invitation email if requested or for direct vendor registration
-    if ((sendInvitationEmail || (role === 'VENDOR' && password)) && role === 'VENDOR' && verificationToken) {
+    // Send verification email for all user types who need verification
+    if (verificationToken && !emailVerification) {
       try {
-        // Try the full HTML email first
-        const emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
+        let emailResult
+        
+        if (role === 'VENDOR') {
+          // Use vendor-specific email for vendors
+          emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
+        } else {
+          // Use general verification email for other roles
+          emailResult = await sendVerificationEmail(email, username, verificationToken, role)
+        }
         
         // If that fails, try a simple email
         if (!emailResult.success) {
+          const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(email)}&role=${role}`
           await sendTestEmail(
             email, 
-            'Welcome to Quick Delivery - Vendor Account Created',
-            `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and activate your account:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
+            'Verify Your Email - Quick Delivery',
+            `Hello ${username},\n\nPlease click the link below to verify your email and activate your account:\n\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
           )
         }
       } catch (emailError) {
-        console.error('Error sending invitation email:', emailError)
+        console.error('Error sending verification email:', emailError)
         // Don't fail the request if email fails
       }
     }

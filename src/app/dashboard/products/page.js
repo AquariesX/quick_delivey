@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkUserAccess } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import ProductManagement from '@/components/ProductManagement'
 import VendorProductManagement from '@/components/VendorProductManagement'
@@ -13,25 +14,10 @@ export default function ProductManagementPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !userData) {
-        router.push('/login')
-        return
-      }
-
-      // Check verification status based on user role
-      const userRole = userData?.role || 'CUSTOMER'
-      const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+      const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN', 'VENDOR'])
       
-      if (!isVerified) {
-        router.push('/login')
-        return
-      }
-
-      // Check if user has access to product management
-      const canAccess = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'VENDOR'
-      
-      if (!canAccess) {
-        router.push('/dashboard')
+      if (!access.hasAccess) {
+        router.push(access.redirectTo)
         return
       }
     }
@@ -45,17 +31,13 @@ export default function ProductManagementPage() {
     )
   }
 
-  if (!user || !userData) {
+  const access = checkUserAccess(user, userData, ['ADMIN', 'SUPER_ADMIN', 'VENDOR'])
+  
+  if (!access.hasAccess) {
     return null
   }
 
   const userRole = userData?.role || 'CUSTOMER'
-  const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
-  const canAccess = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'VENDOR'
-  
-  if (!isVerified || !canAccess) {
-    return null
-  }
 
   return (
     <DashboardLayout>
