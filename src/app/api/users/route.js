@@ -87,7 +87,19 @@ export async function POST(request) {
     let verificationToken = null
     let hashedPassword = null
     
-    if (sendInvitationEmail && role === 'VENDOR') {
+    // Handle resend verification case
+    if (resendVerification && existingUserByEmail) {
+      // Generate new verification token for existing user
+      verificationToken = crypto.randomBytes(32).toString('hex')
+      // Update the existing user's verification token
+      await prisma.users.update({
+        where: { id: existingUserByEmail.id },
+        data: {
+          verificationToken: verificationToken,
+          emailVerification: false // Reset verification status
+        }
+      })
+    } else if (sendInvitationEmail && role === 'VENDOR') {
       // Generate a random password for admin-created vendors
       const randomPassword = crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
       hashedPassword = await bcrypt.hash(randomPassword, 12)
@@ -103,37 +115,45 @@ export async function POST(request) {
       verificationToken = crypto.randomBytes(32).toString('hex')
     }
 
-    // Create new user
-    const user = await prisma.users.create({
-      data: {
-        uid: uid || `temp_${Date.now()}`, // Use temp UID for vendors, will be updated when they set password
-        username,
-        email,
-        phoneNumber,
-        password: hashedPassword,
-        role: userRole,
-        type: type || 'firebase',
-        emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password && !generateVerificationToken ? true : false), // Auto-verify admin-created vendors and users without verification tokens
-        verificationToken: verificationToken
-      }
-    })
+    // Create new user (skip if resending verification)
+    let user
+    if (resendVerification && existingUserByEmail) {
+      user = existingUserByEmail
+    } else {
+      user = await prisma.users.create({
+        data: {
+          uid: uid || `temp_${Date.now()}`, // Use temp UID for vendors, will be updated when they set password
+          username,
+          email,
+          phoneNumber,
+          password: hashedPassword,
+          role: userRole,
+          type: type || 'firebase',
+          emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password && !generateVerificationToken ? true : false), // Auto-verify admin-created vendors and users without verification tokens
+          verificationToken: verificationToken
+        }
+      })
+    }
 
     // Send verification email for all user types who need verification
-    if (verificationToken && !emailVerification) {
+    if (verificationToken && (!emailVerification || resendVerification)) {
       try {
         let emailResult
         
-        if (role === 'VENDOR') {
+        // For resend, use the user's actual role from database
+        const userRoleForEmail = resendVerification ? user.role : role
+        
+        if (userRoleForEmail === 'VENDOR') {
           // Use vendor-specific email for vendors
           emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
         } else {
           // Use general verification email for other roles
-          emailResult = await sendVerificationEmail(email, username, verificationToken, role)
+          emailResult = await sendVerificationEmail(email, username, verificationToken, userRoleForEmail)
         }
         
         // If that fails, try a simple email
         if (!emailResult.success) {
-          const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(email)}&role=${role}`
+          const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(email)}&role=${userRoleForEmail}`
           await sendTestEmail(
             email, 
             'Verify Your Email - Quick Delivery',

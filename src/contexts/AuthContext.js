@@ -451,26 +451,28 @@ export default function AuthContextProvider({ children }) {
   const resendEmailVerification = async () => {
     try {
       if (user && !user.emailVerified) {
-        let retries = 3
-        let verificationSent = false
+        // Use our unified verification system instead of Firebase's
+        const response = await fetch('/api/users', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            username: user.displayName || 'User',
+            role: 'USER', // Default role for resend
+            generateVerificationToken: true,
+            resendVerification: true
+          })
+        })
         
-        while (retries > 0 && !verificationSent) {
-          try {
-            await sendEmailVerification(user)
-            toast.success('Verification email sent!')
-            verificationSent = true
-          } catch (error) {
-            if (error.code === 'auth/network-request-failed' && retries > 1) {
-              await new Promise(resolve => setTimeout(resolve, 2000))
-              retries--
-              continue
-            }
-            throw error
-          }
-        }
+        const result = await response.json()
         
-        if (!verificationSent) {
-          throw new Error('Failed to send verification email after multiple attempts')
+        if (result.success) {
+          toast.success('Verification email sent!')
+        } else {
+          throw new Error(result.error || 'Failed to send verification email')
         }
       }
     } catch (error) {
