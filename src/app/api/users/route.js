@@ -136,7 +136,7 @@ export async function POST(request) {
     }
 
     // Send verification email for all user types who need verification
-    if (verificationToken && (!emailVerification || resendVerification === true)) {
+    if (verificationToken && (!user.emailVerification || resendVerification === true)) {
       try {
         let emailResult
         
