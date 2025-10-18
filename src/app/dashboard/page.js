@@ -17,12 +17,21 @@ export default function DashboardPage() {
         return
       }
       
-      if (!user.emailVerified) {
-        router.push('/login')
-        return
+      // For vendors, check database verification status
+      if (userData && userData.role === 'VENDOR') {
+        if (!userData.emailVerification) {
+          router.push('/login')
+          return
+        }
+      } else {
+        // For non-vendors, check Firebase email verification
+        if (!user.emailVerified) {
+          router.push('/login')
+          return
+        }
       }
     }
-  }, [user, loading, router])
+  }, [user, userData, loading, router])
 
   if (loading) {
     return (
@@ -32,7 +41,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user || !user.emailVerified) {
+  if (!user || (!userData?.emailVerification && userData?.role === 'VENDOR') || (!user.emailVerified && userData?.role !== 'VENDOR')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">

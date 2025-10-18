@@ -373,29 +373,35 @@ export default function AuthContextProvider({ children }) {
       console.log('Attempting Firebase authentication...')
       const { user } = await signInWithEmailAndPassword(auth, email, password)
       
-      // For vendors, check database verification status instead of Firebase verification
+      // Check if this is a vendor and verify their database status
+      try {
+        const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+        if (response.ok) {
+          const result = await response.json()
+          if (result.success && result.user && result.user.role === 'VENDOR') {
+            // This is a vendor - check database verification status
+            if (result.user.emailVerification) {
+              console.log('Vendor verified in database, allowing login')
+              toast.success('Welcome back!')
+              // Ensure the user object has emailVerified set to true for dashboard access
+              user.emailVerified = true
+              return user
+            } else {
+              toast.error('Please verify your email before signing in.')
+              await signOut(auth)
+              return null
+            }
+          }
+        }
+      } catch (dbError) {
+        console.error('Error checking database verification:', dbError)
+      }
+      
+      // For non-vendors, check Firebase email verification
       if (user.emailVerified) {
-        // Firebase user is verified, proceed normally
         toast.success('Welcome back!')
         return user
       } else {
-        // Firebase user is not verified, check if it's a vendor with database verification
-        try {
-          const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
-          if (response.ok) {
-            const result = await response.json()
-            if (result.success && result.user && result.user.role === 'VENDOR' && result.user.emailVerification) {
-              // Vendor is verified in database, allow login
-              console.log('Vendor verified in database, allowing login')
-              toast.success('Welcome back!')
-              return user
-            }
-          }
-        } catch (dbError) {
-          console.error('Error checking database verification:', dbError)
-        }
-        
-        // Not a verified vendor, require Firebase email verification
         toast.error('Please verify your email before signing in.')
         await signOut(auth)
         return null

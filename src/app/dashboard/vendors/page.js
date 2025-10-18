@@ -12,12 +12,21 @@ export default function VendorsPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !user.emailVerified) {
+      if (!user || !userData) {
         router.push('/login')
         return
       }
       
-      if (userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN') {
+      // Check verification status based on user role
+      const userRole = userData?.role || 'CUSTOMER'
+      const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+      
+      if (!isVerified) {
+        router.push('/login')
+        return
+      }
+      
+      if (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN') {
         router.push('/dashboard')
         return
       }
@@ -32,7 +41,14 @@ export default function VendorsPage() {
     )
   }
 
-  if (!user || !user.emailVerified || (userData?.role !== 'ADMIN' && userData?.role !== 'SUPER_ADMIN')) {
+  if (!user || !userData) {
+    return null
+  }
+
+  const userRole = userData?.role || 'CUSTOMER'
+  const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+  
+  if (!isVerified || (userRole !== 'ADMIN' && userRole !== 'SUPER_ADMIN')) {
     return null
   }
 

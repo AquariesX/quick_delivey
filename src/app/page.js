@@ -5,18 +5,26 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function Home() {
-  const { user, loading } = useAuth()
+  const { user, userData, loading } = useAuth()
   const router = useRouter()
 
   useEffect(() => {
     if (!loading) {
-      if (user && user.emailVerified) {
-        router.push('/dashboard')
+      if (user && userData) {
+        // Check verification status based on user role
+        const userRole = userData?.role || 'CUSTOMER'
+        const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+        
+        if (isVerified) {
+          router.push('/dashboard')
+        } else {
+          router.push('/login')
+        }
       } else {
         router.push('/login')
       }
     }
-  }, [user, loading, router])
+  }, [user, userData, loading, router])
 
   if (loading) {
     return (

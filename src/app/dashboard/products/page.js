@@ -13,13 +13,21 @@ export default function ProductManagementPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !user.emailVerified || !userData) {
+      if (!user || !userData) {
+        router.push('/login')
+        return
+      }
+
+      // Check verification status based on user role
+      const userRole = userData?.role || 'CUSTOMER'
+      const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
+      
+      if (!isVerified) {
         router.push('/login')
         return
       }
 
       // Check if user has access to product management
-      const userRole = userData?.role || 'CUSTOMER'
       const canAccess = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'VENDOR'
       
       if (!canAccess) {
@@ -37,14 +45,15 @@ export default function ProductManagementPage() {
     )
   }
 
-  if (!user || !user.emailVerified || !userData) {
+  if (!user || !userData) {
     return null
   }
 
   const userRole = userData?.role || 'CUSTOMER'
+  const isVerified = userRole === 'VENDOR' ? userData.emailVerification : user.emailVerified
   const canAccess = userRole === 'ADMIN' || userRole === 'SUPER_ADMIN' || userRole === 'VENDOR'
   
-  if (!canAccess) {
+  if (!isVerified || !canAccess) {
     return null
   }
 
