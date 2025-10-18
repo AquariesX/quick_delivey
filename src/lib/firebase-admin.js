@@ -8,6 +8,8 @@ const firebaseAdminConfig = {
 // Add credential only if service account key is provided
 if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
+    console.log('Attempting to parse Firebase service account key...')
+    
     // Clean and validate the JSON string
     let serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY.trim()
     
@@ -36,21 +38,30 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
       throw new Error('Invalid service account key: missing required fields (type, project_id, or private_key)')
     }
     
+    console.log('Firebase service account key parsed successfully')
     firebaseAdminConfig.credential = cert(parsedKey)
   } catch (error) {
+    console.error('Error parsing Firebase service account key:', error.message)
+    console.log('Falling back to Application Default Credentials...')
+    
     // Silently fallback to Application Default Credentials for production deployments
     try {
       firebaseAdminConfig.credential = applicationDefault()
+      console.log('Using Application Default Credentials')
     } catch (fallbackError) {
+      console.error('Application Default Credentials also failed:', fallbackError.message)
       // Initialize without credentials (limited functionality)
       // This allows the app to start even without proper Firebase credentials
     }
   }
 } else {
+  console.log('No Firebase service account key provided, trying Application Default Credentials...')
   // No service account key provided, try Application Default Credentials
   try {
     firebaseAdminConfig.credential = applicationDefault()
+    console.log('Using Application Default Credentials')
   } catch (error) {
+    console.error('Application Default Credentials failed:', error.message)
     // Initialize without credentials (limited functionality)
   }
 }

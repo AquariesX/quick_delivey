@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/prisma'
 import { sendVendorInvitationEmail, sendVerificationSuccessEmail } from '@/lib/emailService'
+import { adminAuth } from '@/lib/firebase-admin'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 
@@ -39,22 +40,31 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // If email is already verified (admin-created vendor), just return success
+    // If email is already verified (admin-created vendor), check if Firebase user exists
     if (user.emailVerification) {
-      console.log('Email already verified, returning success')
-      return Response.json({ 
-        success: true, 
-        message: 'Email already verified! Your account is active.',
-        user: {
-          id: user.id,
-          uid: user.uid,
-          username: user.username,
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          role: user.role,
-          emailVerification: user.emailVerification
-        }
-      })
+      console.log('Email already verified, checking Firebase user')
+      
+      // Check if user has a real Firebase UID (not temp)
+      if (user.uid && !user.uid.startsWith('temp_')) {
+        console.log('Firebase user already exists, returning success')
+        return Response.json({ 
+          success: true, 
+          message: 'Email already verified! Your account is active.',
+          user: {
+            id: user.id,
+            uid: user.uid,
+            username: user.username,
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            role: user.role,
+            emailVerification: user.emailVerification
+          }
+        })
+      } else {
+        // User is verified but doesn't have Firebase account, create one
+        console.log('Creating Firebase user for verified vendor')
+        return await createFirebaseUserForVendor(user, decodedEmail)
+      }
     }
 
     // Check if token is expired (24 hours)
@@ -68,14 +78,45 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    // Verify the email (step 1)
+    // Verify the email and create Firebase user
+    console.log('Verifying email and creating Firebase user')
+    return await createFirebaseUserForVendor(user, decodedEmail)
+  } catch (error) {
+    console.error('Error verifying vendor email:', error)
+    return Response.json({ 
+      success: false, 
+      error: error.message 
+    }, { status: 500 })
+  }
+}
+
+// Helper function to create Firebase user for vendor
+async function createFirebaseUserForVendor(user, email) {
+  try {
+    // Generate a random password for the vendor
+    const randomPassword = crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
+    
+    // Generate a Firebase-compatible UID (32 characters, alphanumeric)
+    const firebaseUID = crypto.randomBytes(16).toString('hex')
+    
+    console.log('Generated Firebase UID:', firebaseUID)
+    console.log('Generated password length:', randomPassword.length)
+    
+    // Hash the password for database storage
+    const hashedPassword = await bcrypt.hash(randomPassword, 12)
+
+    // Update user with Firebase UID, password, and verification status
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
+        uid: firebaseUID,
+        password: hashedPassword,
         emailVerification: true,
         verificationToken: null // Clear the token after verification
       }
     })
+
+    console.log('Updated user with new UID:', updatedUser.uid)
 
     // Send verification success email
     try {
@@ -99,10 +140,10 @@ export async function POST(request) {
       }
     })
   } catch (error) {
-    console.error('Error verifying vendor email:', error)
+    console.error('Error creating Firebase user for vendor:', error)
     return Response.json({ 
       success: false, 
-      error: error.message 
+      error: 'Failed to create Firebase user' 
     }, { status: 500 })
   }
 }
