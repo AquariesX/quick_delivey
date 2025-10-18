@@ -145,15 +145,29 @@ async function createFirebaseUserForVendor(user, email) {
       }
     }
     
-    // Hash the password for database storage
-    const hashedPassword = await bcrypt.hash(randomPassword, 12)
+    // Check if user already has a password (from direct registration)
+    let finalPassword = user.password
+    let passwordToUse = randomPassword
+    
+    if (user.password && !user.password.startsWith('$2b$')) {
+      // User has a plain text password from direct registration, hash it
+      finalPassword = await bcrypt.hash(user.password, 12)
+      passwordToUse = user.password
+    } else if (user.password && user.password.startsWith('$2b$')) {
+      // User already has a hashed password, keep it
+      finalPassword = user.password
+      passwordToUse = 'existing_password'
+    } else {
+      // User doesn't have a password, use the generated one
+      finalPassword = await bcrypt.hash(randomPassword, 12)
+    }
 
     // Update user with Firebase UID, password, and verification status
     const updatedUser = await prisma.users.update({
       where: { id: user.id },
       data: {
         uid: firebaseUID,
-        password: hashedPassword,
+        password: finalPassword,
         emailVerification: true,
         verificationToken: null // Clear the token after verification
       }
