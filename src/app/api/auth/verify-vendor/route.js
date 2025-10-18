@@ -25,18 +25,36 @@ export async function POST(request) {
     const user = await prisma.users.findFirst({
       where: {
         email: decodedEmail,
-        verificationToken: token,
-        emailVerification: false
+        verificationToken: token
       }
     })
 
     console.log('Found user for verification:', user ? 'Yes' : 'No')
+    console.log('User email verification status:', user?.emailVerification)
 
     if (!user) {
       return Response.json({ 
         success: false, 
         error: 'Invalid or expired verification token' 
       }, { status: 400 })
+    }
+
+    // If email is already verified (admin-created vendor), just return success
+    if (user.emailVerification) {
+      console.log('Email already verified, returning success')
+      return Response.json({ 
+        success: true, 
+        message: 'Email already verified! Your account is active.',
+        user: {
+          id: user.id,
+          uid: user.uid,
+          username: user.username,
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          role: user.role,
+          emailVerification: user.emailVerification
+        }
+      })
     }
 
     // Check if token is expired (24 hours)
@@ -69,7 +87,7 @@ export async function POST(request) {
 
     return Response.json({ 
       success: true, 
-      message: 'Email verified successfully! Please set your password to complete setup.',
+      message: 'Email verified successfully! Your account is now active.',
       user: {
         id: updatedUser.id,
         uid: updatedUser.uid,

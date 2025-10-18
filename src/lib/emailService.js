@@ -54,7 +54,7 @@ export const sendVendorInvitationEmail = async (vendorEmail, vendorUsername, ver
               <h3 style="color: #333; margin-top: 0;">Next Steps:</h3>
               <ol style="color: #666; line-height: 1.8;">
                 <li>Click the verification button below to verify your email address</li>
-                <li>Set up your password to secure your account</li>
+                <li>Your account will be automatically activated</li>
                 <li>Complete your vendor profile</li>
                 <li>Start adding your products!</li>
               </ol>
@@ -70,7 +70,7 @@ export const sendVendorInvitationEmail = async (vendorEmail, vendorUsername, ver
                         display: inline-block; 
                         font-weight: bold;
                         font-size: 16px;">
-                Verify Email & Set Password
+                Verify Email & Activate Account
               </a>
             </div>
             

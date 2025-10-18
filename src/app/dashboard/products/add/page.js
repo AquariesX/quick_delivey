@@ -21,7 +21,11 @@ import {
   Tag,
   BarChart3,
   FileText,
-  Camera
+  Camera,
+  Plus,
+  Palette,
+  Ruler,
+  Sparkles
 } from 'lucide-react'
 
 const AddProductPage = () => {
@@ -31,6 +35,8 @@ const AddProductPage = () => {
   const [subcategories, setSubcategories] = useState([])
   const [uploadingImages, setUploadingImages] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showSizePopup, setShowSizePopup] = useState(false)
+  const [showColorPopup, setShowColorPopup] = useState(false)
   
   const [formData, setFormData] = useState({
     proName: '',
@@ -64,10 +70,30 @@ const AddProductPage = () => {
     warranty: '',
     ingredients: '',
     reviews: [],
-    additionalBarcode: ''
+    // Size and Color fields
+    size: '',
+    customSize: '',
+    color: '',
+    customColor: ''
   })
 
   const [errors, setErrors] = useState({})
+
+  // Predefined colors with hex values
+  const predefinedColors = [
+    { name: 'Black', hex: '#000000' },
+    { name: 'White', hex: '#FFFFFF' },
+    { name: 'Red', hex: '#EF4444' },
+    { name: 'Blue', hex: '#3B82F6' },
+    { name: 'Green', hex: '#10B981' },
+    { name: 'Yellow', hex: '#F59E0B' },
+    { name: 'Purple', hex: '#8B5CF6' },
+    { name: 'Pink', hex: '#EC4899' },
+    { name: 'Orange', hex: '#F97316' },
+    { name: 'Gray', hex: '#6B7280' },
+    { name: 'Brown', hex: '#92400E' },
+    { name: 'Navy', hex: '#1E3A8A' }
+  ]
 
   // Authentication and access control
   useEffect(() => {
@@ -206,7 +232,9 @@ const AddProductPage = () => {
         warranty: formData.warranty || null,
         ingredients: formData.ingredients || null,
         reviews: formData.reviews.length > 0 ? formData.reviews : null,
-        additionalBarcode: formData.additionalBarcode || null
+        // Size and Color fields
+        size: formData.size === 'custom' ? formData.customSize : formData.size || null,
+        color: formData.color === 'custom' ? formData.customColor : formData.color || null
       }
       
       console.log('Sending request to API with body:', requestBody)
@@ -353,7 +381,9 @@ const AddProductPage = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
           >
             <div className="flex items-center mb-6">
-              <Package className="w-6 h-6 text-blue-500 mr-3" />
+              <div className="p-2 bg-blue-100 rounded-lg mr-3">
+                <Package className="w-6 h-6 text-blue-600" />
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">Basic Information</h2>
             </div>
             
@@ -368,7 +398,7 @@ const AddProductPage = () => {
                     type="text"
                     value={formData.proName}
                     onChange={(e) => handleInputChange('proName', e.target.value)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors ${
+                    className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all duration-200 hover:border-gray-400 shadow-sm ${
                       errors.proName ? 'border-red-300 bg-red-50' : 'border-gray-300'
                     }`}
                     placeholder="Enter product name"
@@ -524,7 +554,9 @@ const AddProductPage = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
           >
             <div className="flex items-center mb-6">
-              <Package className="w-6 h-6 text-purple-500 mr-3" />
+              <div className="p-2 bg-purple-100 rounded-lg mr-3">
+                <Sparkles className="w-6 h-6 text-purple-600" />
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">Additional Product Information</h2>
             </div>
             
@@ -589,18 +621,108 @@ const AddProductPage = () => {
                 />
               </div>
 
-              {/* Size Name */}
+              {/* Size */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Size Name
-                </label>
-                <input
-                  type="text"
-                  value={formData.sizeName}
-                  onChange={(e) => handleInputChange('sizeName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
-                  placeholder="e.g., Small, Medium, Large"
-                />
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Size
+                  </label>
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowSizePopup(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span className="text-sm font-medium">Add Custom</span>
+                  </motion.button>
+                </div>
+                <div className="space-y-3">
+                  <select
+                    value={formData.size}
+                    onChange={(e) => handleInputChange('size', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all duration-200 hover:border-gray-400 shadow-sm"
+                  >
+                    <option value="">Select Size</option>
+                    <option value="Small">Small</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Large">Large</option>
+                    <option value="XL">XL</option>
+                  </select>
+                  {formData.size && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm"
+                    >
+                      <div className="p-1 bg-blue-200 rounded-lg">
+                        <Ruler className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <span className="text-sm font-semibold text-blue-800">{formData.size}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('size', '')}
+                        className="ml-auto p-1 text-blue-500 hover:text-blue-700 hover:bg-blue-200 rounded-lg transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Color */}
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Color
+                  </label>
+                  <motion.button
+                    type="button"
+                    onClick={() => setShowColorPopup(true)}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="flex items-center space-x-2 px-3 py-2 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-xl hover:from-purple-600 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+                  >
+                    <Palette className="w-4 h-4" />
+                    <span className="text-sm font-medium">Add Custom</span>
+                  </motion.button>
+                </div>
+                <div className="space-y-3">
+                  <select
+                    value={formData.color}
+                    onChange={(e) => handleInputChange('color', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 transition-all duration-200 hover:border-gray-400 shadow-sm"
+                  >
+                    <option value="">Select Color</option>
+                    {predefinedColors.slice(0, 4).map(color => (
+                      <option key={color.name} value={color.name}>{color.name}</option>
+                    ))}
+                  </select>
+                  {formData.color && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center space-x-3 px-4 py-3 bg-gradient-to-r from-purple-50 to-purple-100 rounded-xl border border-purple-200 shadow-sm"
+                    >
+                      <div className="p-1 bg-purple-200 rounded-lg">
+                        <div 
+                          className="w-4 h-4 rounded-full border border-gray-300 shadow-sm"
+                          style={{ backgroundColor: predefinedColors.find(c => c.name === formData.color)?.hex || '#6B7280' }}
+                        />
+                      </div>
+                      <span className="text-sm font-semibold text-purple-800">{formData.color}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleInputChange('color', '')}
+                        className="ml-auto p-1 text-purple-500 hover:text-purple-700 hover:bg-purple-200 rounded-lg transition-all duration-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
               </div>
 
               {/* Condition Type */}
@@ -663,19 +785,6 @@ const AddProductPage = () => {
                 />
               </div>
 
-              {/* Additional Barcode */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Additional Barcode
-                </label>
-                <input
-                  type="text"
-                  value={formData.additionalBarcode}
-                  onChange={(e) => handleInputChange('additionalBarcode', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-black transition-colors"
-                  placeholder="Enter additional barcode"
-                />
-              </div>
             </div>
 
             {/* Key Features */}
@@ -745,7 +854,9 @@ const AddProductPage = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
           >
             <div className="flex items-center mb-6">
-              <DollarSign className="w-6 h-6 text-orange-500 mr-3" />
+              <div className="p-2 bg-orange-100 rounded-lg mr-3">
+                <DollarSign className="w-6 h-6 text-orange-600" />
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">Sale Information</h2>
             </div>
             
@@ -824,7 +935,9 @@ const AddProductPage = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
           >
             <div className="flex items-center mb-6">
-              <DollarSign className="w-6 h-6 text-green-500 mr-3" />
+              <div className="p-2 bg-green-100 rounded-lg mr-3">
+                <DollarSign className="w-6 h-6 text-green-600" />
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">Pricing & Inventory</h2>
             </div>
             
@@ -940,7 +1053,9 @@ const AddProductPage = () => {
             className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
           >
             <div className="flex items-center mb-6">
-              <Camera className="w-6 h-6 text-purple-500 mr-3" />
+              <div className="p-2 bg-indigo-100 rounded-lg mr-3">
+                <Camera className="w-6 h-6 text-indigo-600" />
+              </div>
               <h2 className="text-xl font-semibold text-gray-900">Product Images</h2>
             </div>
             
@@ -1062,6 +1177,176 @@ const AddProductPage = () => {
             </motion.button>
           </motion.div>
         </form>
+
+        {/* Custom Size Popup */}
+        {showSizePopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowSizePopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Ruler className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Add Custom Size</h3>
+                </div>
+                <button
+                  onClick={() => setShowSizePopup(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Size Name
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.customSize}
+                    onChange={(e) => handleInputChange('customSize', e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                    placeholder="e.g., XXL, 2XL, Extra Small"
+                    autoFocus
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowSizePopup(false)}
+                    className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (formData.customSize.trim()) {
+                        handleInputChange('size', formData.customSize.trim())
+                        handleInputChange('customSize', '')
+                        setShowSizePopup(false)
+                      }
+                    }}
+                    disabled={!formData.customSize.trim()}
+                    className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                  >
+                    Add Size
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {/* Custom Color Popup */}
+        {showColorPopup && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            onClick={() => setShowColorPopup(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-white rounded-2xl shadow-2xl max-w-lg w-full p-6"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <Palette className="w-6 h-6 text-purple-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900">Choose Color</h3>
+                </div>
+                <button
+                  onClick={() => setShowColorPopup(false)}
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Predefined Colors */}
+                <div>
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Predefined Colors</h4>
+                  <div className="grid grid-cols-6 gap-3">
+                    {predefinedColors.map((color, index) => (
+                      <motion.button
+                        key={color.name}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        onClick={() => {
+                          handleInputChange('color', color.name)
+                          setShowColorPopup(false)
+                        }}
+                        className="group relative p-3 rounded-xl hover:scale-105 transition-all duration-200 hover:shadow-lg"
+                        style={{ backgroundColor: color.hex }}
+                      >
+                        <div className="w-8 h-8 rounded-full border-2 border-white shadow-sm group-hover:border-gray-300 transition-colors" />
+                        <div className="absolute inset-0 rounded-xl bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200" />
+                        <span className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-xs font-medium text-gray-600 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                          {color.name}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom Color Input */}
+                <div className="border-t border-gray-200 pt-6">
+                  <h4 className="text-sm font-medium text-gray-700 mb-3">Custom Color</h4>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={formData.customColor}
+                      onChange={(e) => handleInputChange('customColor', e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent text-gray-900 transition-all duration-200"
+                      placeholder="Enter color name (e.g., Midnight Blue, Forest Green)"
+                    />
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => setShowColorPopup(false)}
+                        className="flex-1 px-4 py-3 text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors font-medium"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (formData.customColor.trim()) {
+                            handleInputChange('color', formData.customColor.trim())
+                            handleInputChange('customColor', '')
+                            setShowColorPopup(false)
+                          }
+                        }}
+                        disabled={!formData.customColor.trim()}
+                        className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-medium"
+                      >
+                        Add Color
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
       </div>
     </DashboardLayout>
   )

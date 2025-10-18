@@ -177,7 +177,8 @@ export async function POST(request) {
           warranty: data.warranty || null,
           ingredients: data.ingredients || null,
           reviews: data.reviews || null,
-          additionalBarcode: data.additionalBarcode || null
+          size: data.size || null,
+          color: data.color || null
         }
       })
 

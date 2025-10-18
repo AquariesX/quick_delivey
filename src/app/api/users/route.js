@@ -88,6 +88,9 @@ export async function POST(request) {
     let hashedPassword = null
     
     if (sendInvitationEmail && role === 'VENDOR') {
+      // Generate a random password for admin-created vendors
+      const randomPassword = crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
+      hashedPassword = await bcrypt.hash(randomPassword, 12)
       verificationToken = crypto.randomBytes(32).toString('hex')
     } else if (password) {
       hashedPassword = await bcrypt.hash(password, 12)
@@ -107,7 +110,7 @@ export async function POST(request) {
         password: hashedPassword,
         role: userRole,
         type: type || 'firebase',
-        emailVerification: password ? true : false, // Auto-verify if password provided
+        emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password ? true : false), // Auto-verify admin-created vendors
         verificationToken: verificationToken
       }
     })
@@ -123,7 +126,7 @@ export async function POST(request) {
           await sendTestEmail(
             email, 
             'Welcome to Quick Delivery - Vendor Account Created',
-            `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and set your password:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
+            `Hello ${username},\n\nYour vendor account has been created. Please click the link below to verify your email and activate your account:\n\n${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-vendor?token=${verificationToken}&email=${encodeURIComponent(email)}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
           )
         }
       } catch (emailError) {

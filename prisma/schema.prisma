@@ -127,7 +127,8 @@ model Product {
   warranty            String?   @db.VarChar(255)
   ingredients         String?   @db.Text
   reviews             Json?     // Array of review objects
-  additionalBarcode   String?   @map("additional_barcode") @db.VarChar(100)
+  size                String?   @db.VarChar(100)
+  color               String?   @db.VarChar(100)
 
   // Relations
   category   Category   @relation(fields: [catId], references: [id], onDelete: Cascade)

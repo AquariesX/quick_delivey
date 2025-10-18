@@ -52,7 +52,6 @@ const VendorManagement = () => {
     username: '',
     email: '',
     phoneNumber: '',
-    password: '',
     role: 'VENDOR',
     emailVerification: false
   })
@@ -206,7 +205,6 @@ const VendorManagement = () => {
           username: '',
           email: '',
           phoneNumber: '',
-          password: '',
           role: 'VENDOR',
           emailVerification: false
         })

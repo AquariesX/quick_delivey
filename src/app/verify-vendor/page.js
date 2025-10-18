@@ -3,26 +3,22 @@
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { CheckCircle, XCircle, Eye, EyeOff, Lock, Mail, User, Phone, ArrowRight } from 'lucide-react'
+import { CheckCircle, XCircle, Mail, User, Phone, ArrowRight } from 'lucide-react'
 
 function VerifyVendorContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(false)
-  const [step, setStep] = useState('verifying') // verifying, email-verified, set-password, success, error
+  const [step, setStep] = useState('verifying') // verifying, email-verified, success, error
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
   
   const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: '',
     username: '',
     email: '',
     phoneNumber: ''
   })
   
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [userData, setUserData] = useState(null)
 
   const token = searchParams.get('token')
@@ -74,8 +70,8 @@ function VerifyVendorContent() {
           email: result.user.email,
           phoneNumber: result.user.phoneNumber
         }))
-        setStep('email-verified')
-        setSuccess('Email verified successfully!')
+        setStep('success')
+        setSuccess('Email verified successfully! Your vendor account is now active.')
       } else {
         console.error('Email verification failed:', result.error)
         setError(result.error || 'Invalid or expired verification link')
@@ -98,79 +94,6 @@ function VerifyVendorContent() {
     }))
   }
 
-  const handleSetPassword = async (e) => {
-    e.preventDefault()
-    
-    console.log('Set password form submitted with data:', {
-      email: formData.email,
-      username: formData.username,
-      phoneNumber: formData.phoneNumber,
-      passwordLength: formData.password.length,
-      confirmPasswordLength: formData.confirmPassword.length
-    })
-    
-    if (formData.password !== formData.confirmPassword) {
-      console.log('Password mismatch error')
-      setError('Passwords do not match')
-      return
-    }
-    
-    if (formData.password.length < 6) {
-      console.log('Password too short error')
-      setError('Password must be at least 6 characters long')
-      return
-    }
-    
-    try {
-      setLoading(true)
-      setError('') // Clear any previous errors
-      
-      console.log('Sending request to set vendor password...')
-      const response = await fetch('/api/auth/set-vendor-password', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: formData.email,
-          password: formData.password,
-          username: formData.username,
-          phoneNumber: formData.phoneNumber
-        })
-      })
-      
-      console.log('Response status:', response.status)
-      
-      if (!response.ok) {
-        console.log('HTTP error:', response.status, response.statusText)
-        setError(`Server error: ${response.status} ${response.statusText}`)
-        return
-      }
-      
-      const result = await response.json()
-      console.log('Response result:', result)
-      
-      if (result.success) {
-        console.log('Password set successfully, moving to success step')
-        setStep('success')
-        setSuccess('Password set successfully! You can now login to your account.')
-        
-        // Auto redirect to login after 3 seconds
-        setTimeout(() => {
-          router.push('/login')
-        }, 3000)
-      } else {
-        console.log('Password set failed:', result.error)
-        setError(result.error || 'Failed to set password')
-      }
-    } catch (error) {
-      console.error('Error setting password:', error)
-      setError('Failed to set password. Please try again.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
   const renderVerifyingStep = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -190,182 +113,6 @@ function VerifyVendorContent() {
     </motion.div>
   )
 
-  const renderEmailVerifiedStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="text-center"
-    >
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-        <CheckCircle className="w-8 h-8 text-green-600" />
-      </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Email Verified!</h2>
-      <p className="text-gray-600 mb-6">Your email has been successfully verified. Now let&apos;s set up your password.</p>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={() => setStep('set-password')}
-        className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
-      >
-        <ArrowRight className="w-4 h-4" />
-        Set Password
-      </motion.button>
-    </motion.div>
-  )
-
-  const renderSetPasswordStep = () => (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-    >
-      <div className="text-center mb-6">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <Lock className="w-8 h-8 text-blue-600" />
-        </div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Set Your Password</h2>
-        <p className="text-gray-600">Create a secure password for your vendor account</p>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600 text-sm">{error}</p>
-        </div>
-      )}
-      
-      <form onSubmit={handleSetPassword} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Username
-          </label>
-          <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleInputChange}
-              required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              placeholder="Enter username"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              placeholder="Enter email"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Phone Number
-          </label>
-          <div className="relative">
-            <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="tel"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleInputChange}
-              required
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              placeholder="Enter phone number"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Password
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type={showPassword ? 'text' : 'password'}
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              placeholder="Enter password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Confirm Password
-          </label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type={showConfirmPassword ? 'text' : 'password'}
-              name="confirmPassword"
-              value={formData.confirmPassword}
-              onChange={handleInputChange}
-              required
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
-              placeholder="Confirm password"
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-            >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-        </div>
-
-        <motion.button
-          whileHover={{ scale: 1.02 }}
-          whileTap={{ scale: 0.98 }}
-          type="submit"
-          disabled={loading}
-          className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {loading ? (
-            <>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                className="w-4 h-4 border-2 border-white border-t-transparent rounded-full"
-              />
-              Setting Password...
-            </>
-          ) : (
-            <>
-              <Lock className="w-4 h-4" />
-              Set Password
-            </>
-          )}
-        </motion.button>
-      </form>
-    </motion.div>
-  )
-
   const renderSuccessStep = () => (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -376,9 +123,9 @@ function VerifyVendorContent() {
       <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
         <CheckCircle className="w-8 h-8 text-green-600" />
       </div>
-      <h2 className="text-2xl font-bold text-gray-800 mb-4">Account Setup Complete!</h2>
-      <p className="text-gray-600 mb-4">Your vendor account has been successfully set up. You can now login to your dashboard.</p>
-      <p className="text-sm text-gray-500 mb-6">Redirecting to login page in 3 seconds...</p>
+      <h2 className="text-2xl font-bold text-gray-800 mb-4">Account Verified!</h2>
+      <p className="text-gray-600 mb-4">Your vendor account has been successfully verified and is now active.</p>
+      <p className="text-sm text-gray-500 mb-6">You can now login to your vendor dashboard using your email and the password that was generated for you.</p>
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -386,7 +133,7 @@ function VerifyVendorContent() {
         className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2 mx-auto"
       >
         <ArrowRight className="w-4 h-4" />
-        Go to Login Now
+        Go to Login
       </motion.button>
     </motion.div>
   )
@@ -420,8 +167,6 @@ function VerifyVendorContent() {
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           {step === 'verifying' && renderVerifyingStep()}
-          {step === 'email-verified' && renderEmailVerifiedStep()}
-          {step === 'set-password' && renderSetPasswordStep()}
           {step === 'success' && renderSuccessStep()}
           {error && step === 'error' && renderErrorStep()}
         </div>
