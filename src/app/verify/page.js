@@ -32,7 +32,7 @@ function VerifyEmailContent() {
       setLoading(true)
       setStep('verifying')
       
-      const response = await fetch('/api/auth/verify-email', {
+      const response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
