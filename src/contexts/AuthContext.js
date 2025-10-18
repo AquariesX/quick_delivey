@@ -307,15 +307,50 @@ export default function AuthContextProvider({ children }) {
     try {
       setLoading(true)
       
-      // First, check if this is a vendor who needs to set their password
+      // First, check if this is a vendor
       try {
         const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
         if (response.ok) {
           const result = await response.json()
           if (result.success && result.user && result.user.role === 'VENDOR') {
-            // Check if vendor has set their password (has Firebase UID)
+            // Check if vendor has set their password (has proper UID)
             if (!result.user.uid || result.user.uid.startsWith('temp_')) {
-              toast.error('Please complete your account setup by setting your password first.')
+              toast.error('Please complete your account setup by verifying your email first.')
+              return null
+            }
+            
+            // For vendors, use database authentication
+            console.log('Attempting database authentication for vendor...')
+            const dbResponse = await fetch('/api/auth/database-login', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ email, password })
+            })
+            
+            if (dbResponse.ok) {
+              const dbResult = await dbResponse.json()
+              if (dbResult.success) {
+                console.log('Database authentication successful')
+                toast.success('Welcome back!')
+                
+                // Create a mock Firebase user object for compatibility
+                const mockFirebaseUser = {
+                  uid: dbResult.user.uid,
+                  email: dbResult.user.email,
+                  displayName: dbResult.user.username,
+                  emailVerified: dbResult.user.emailVerification,
+                  accessToken: dbResult.token
+                }
+                
+                return mockFirebaseUser
+              } else {
+                toast.error(dbResult.error || 'Invalid email or password')
+                return null
+              }
+            } else {
+              toast.error('Authentication failed')
               return null
             }
           }
@@ -324,7 +359,8 @@ export default function AuthContextProvider({ children }) {
         console.error('Error checking user status:', dbError)
       }
       
-      // Proceed with Firebase authentication
+      // For non-vendors, proceed with Firebase authentication
+      console.log('Attempting Firebase authentication...')
       const { user } = await signInWithEmailAndPassword(auth, email, password)
       
       // For vendors, check database verification status instead of Firebase verification

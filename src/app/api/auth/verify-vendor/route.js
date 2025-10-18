@@ -96,11 +96,54 @@ async function createFirebaseUserForVendor(user, email) {
     // Generate a random password for the vendor
     const randomPassword = crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
     
-    // Generate a Firebase-compatible UID (32 characters, alphanumeric)
-    const firebaseUID = crypto.randomBytes(16).toString('hex')
-    
-    console.log('Generated Firebase UID:', firebaseUID)
     console.log('Generated password length:', randomPassword.length)
+    
+    // Try to create Firebase user first
+    let firebaseUser
+    let firebaseUID
+    
+    try {
+      console.log('Attempting to create Firebase user...')
+      firebaseUser = await adminAuth.createUser({
+        email: email,
+        password: randomPassword,
+        displayName: user.username,
+        emailVerified: true, // Mark as verified since they went through email verification
+        disabled: false
+      })
+      firebaseUID = firebaseUser.uid
+      console.log('Firebase user created successfully:', firebaseUID)
+    } catch (firebaseError) {
+      console.error('Error creating Firebase user:', firebaseError.message)
+      
+      // If user already exists in Firebase, try to get the existing user
+      if (firebaseError.code === 'auth/email-already-exists') {
+        try {
+          firebaseUser = await adminAuth.getUserByEmail(email)
+          firebaseUID = firebaseUser.uid
+          console.log('Found existing Firebase user:', firebaseUID)
+          
+          // Update the existing Firebase user's password
+          await adminAuth.updateUser(firebaseUID, {
+            password: randomPassword,
+            displayName: user.username,
+            emailVerified: true
+          })
+          console.log('Updated existing Firebase user password')
+        } catch (updateError) {
+          console.error('Error updating existing Firebase user:', updateError.message)
+          return Response.json({ 
+            success: false, 
+            error: 'Failed to update existing user in Firebase' 
+          }, { status: 500 })
+        }
+      } else {
+        // If Firebase creation fails, generate a fallback UID
+        console.log('Firebase creation failed, generating fallback UID')
+        firebaseUID = crypto.randomBytes(16).toString('hex')
+        console.log('Generated fallback UID:', firebaseUID)
+      }
+    }
     
     // Hash the password for database storage
     const hashedPassword = await bcrypt.hash(randomPassword, 12)
