@@ -319,39 +319,49 @@ export default function AuthContextProvider({ children }) {
               return null
             }
             
-            // For vendors, use database authentication
-            console.log('Attempting database authentication for vendor...')
-            const dbResponse = await fetch('/api/auth/database-login', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ email, password })
-            })
-            
-            if (dbResponse.ok) {
-              const dbResult = await dbResponse.json()
-              if (dbResult.success) {
-                console.log('Database authentication successful')
-                toast.success('Welcome back!')
-                
-                // Create a mock Firebase user object for compatibility
-                const mockFirebaseUser = {
-                  uid: dbResult.user.uid,
-                  email: dbResult.user.email,
-                  displayName: dbResult.user.username,
-                  emailVerified: dbResult.user.emailVerification,
-                  accessToken: dbResult.token
+            // Try Firebase authentication first for vendors
+            try {
+              console.log('Attempting Firebase authentication for vendor...')
+              const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password)
+              console.log('Firebase authentication successful for vendor')
+              toast.success('Welcome back!')
+              return firebaseUser
+            } catch (firebaseError) {
+              console.log('Firebase authentication failed, trying database authentication...')
+              
+              // Fallback to database authentication
+              const dbResponse = await fetch('/api/auth/database-login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password })
+              })
+              
+              if (dbResponse.ok) {
+                const dbResult = await dbResponse.json()
+                if (dbResult.success) {
+                  console.log('Database authentication successful')
+                  toast.success('Welcome back!')
+                  
+                  // Create a mock Firebase user object for compatibility
+                  const mockFirebaseUser = {
+                    uid: dbResult.user.uid,
+                    email: dbResult.user.email,
+                    displayName: dbResult.user.username,
+                    emailVerified: dbResult.user.emailVerification,
+                    accessToken: dbResult.token
+                  }
+                  
+                  return mockFirebaseUser
+                } else {
+                  toast.error(dbResult.error || 'Invalid email or password')
+                  return null
                 }
-                
-                return mockFirebaseUser
               } else {
-                toast.error(dbResult.error || 'Invalid email or password')
+                toast.error('Authentication failed')
                 return null
               }
-            } else {
-              toast.error('Authentication failed')
-              return null
             }
           }
         }
