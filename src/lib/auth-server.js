@@ -1,5 +1,26 @@
-import { adminAuth } from './firebase-admin'
-import { prisma } from './prisma'
+import { adminAuth } from '@/lib/firebase-admin'
+import { prisma } from '@/lib/prisma'
+
+// Check if user is verified and has proper data
+export function checkUserVerification(user, userData) {
+  if (!user) {
+    return { isVerified: false, reason: 'No user' }
+  }
+  
+  if (!user.emailVerified) {
+    return { isVerified: false, reason: 'Email not verified' }
+  }
+  
+  if (!userData) {
+    return { isVerified: false, reason: 'No user data' }
+  }
+  
+  if (!userData.emailVerification) {
+    return { isVerified: false, reason: 'Database verification pending' }
+  }
+  
+  return { isVerified: true, reason: 'All checks passed' }
+}
 
 // Verify Firebase token and get user data
 export async function verifyFirebaseToken(token) {
@@ -26,10 +47,11 @@ export async function getOrCreateUser(firebaseUser) {
         data: {
           uid: firebaseUser.uid,
           username: firebaseUser.name || firebaseUser.email?.split('@')[0] || 'User',
-          phonenumber: firebaseUser.phone_number || '',
-          role: 'Customer', // Default role
+          email: firebaseUser.email,
+          phoneNumber: firebaseUser.phone_number || '',
+          role: 'CUSTOMER',
           emailVerification: firebaseUser.email_verified || false,
-          type: 'firebase'
+          type: 'user'
         }
       })
     }

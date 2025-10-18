@@ -1,314 +1,131 @@
+import { authenticateRequest } from '@/lib/auth-server'
 import { prisma } from '@/lib/prisma'
-import { sendVendorInvitationEmail, sendVerificationEmail } from '@/lib/emailService'
-import { sendTestEmail } from '@/lib/simpleEmail'
-import bcrypt from 'bcryptjs'
-import crypto from 'crypto'
 
-export async function POST(request) {
-  try {
-    const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail, generateVerificationToken, resendVerification } = await request.json()
-
-    // Validate required fields
-    if (!uid && role !== 'VENDOR') {
-      return Response.json({ 
-        success: false, 
-        error: 'UID is required',
-        code: 'MISSING_UID'
-      }, { status: 400 })
-    }
-
-    if (!email) {
-      return Response.json({ 
-        success: false, 
-        error: 'Email is required',
-        code: 'MISSING_EMAIL'
-      }, { status: 400 })
-    }
-
-    // Check if user already exists by email (prevent duplicates)
-    const existingUserByEmail = await prisma.users.findUnique({
-      where: { email }
-    })
-
-    if (existingUserByEmail && existingUserByEmail.uid !== uid) {
-      // Update the existing user's UID to match the new Firebase UID
-      const updatedUser = await prisma.users.update({
-        where: { id: existingUserByEmail.id },
-        data: {
-          uid: uid, // Update UID to match Firebase
-          emailVerification: true // Mark as verified since they're logging in
-        }
-      })
-      
-      return Response.json({ 
-        success: true, 
-        user: updatedUser,
-        message: 'User UID updated to match Firebase authentication' 
-      })
-    }
-
-    // Check if user already exists by UID (for updates) - only if UID is provided
-    let existingUserByUID = null
-    if (uid) {
-      existingUserByUID = await prisma.users.findUnique({
+export async function GET(request) {
+  const { searchParams } = new URL(request.url)
+  const uid = searchParams.get('uid')
+  
+  if (uid) {
+    // Get user by UID (for client-side loading)
+    try {
+      const user = await prisma.users.findUnique({
         where: { uid }
       })
-    }
-
-    if (existingUserByUID) {
-      // Validate and convert role to enum
-      const validRoles = ['ADMIN', 'SUPER_ADMIN', 'DRIVER', 'VENDOR', 'CUSTOMER']
-      const userRole = validRoles.includes(role) ? role : existingUserByUID.role
       
-      // Update existing user with new data
-      const updatedUser = await prisma.users.update({
-        where: { id: existingUserByUID.id },
-        data: {
-          uid,
-          username: username || existingUserByUID.username,
-          phoneNumber: phoneNumber || existingUserByUID.phoneNumber,
-          role: userRole,
-          type: type || existingUserByUID.type
-        }
-      })
+      if (!user) {
+        return Response.json({ 
+          success: false, 
+          error: 'User not found' 
+        }, { status: 404 })
+      }
       
-      return Response.json({ 
-        success: true, 
-        user: updatedUser,
-        message: 'User updated successfully' 
-      })
+      return Response.json({ success: true, user })
+    } catch (error) {
+      console.error('Database error:', error)
+      return Response.json({ error: 'Database error' }, { status: 500 })
     }
-
-    // Validate and convert role to enum
-    const validRoles = ['ADMIN', 'SUPER_ADMIN', 'DRIVER', 'VENDOR', 'CUSTOMER']
-    const userRole = validRoles.includes(role) ? role : 'CUSTOMER'
-
-    // Generate verification token based on requirements
-    let verificationToken = null
-    let hashedPassword = null
-    
-    // Handle resend verification case
-    if (resendVerification === true && existingUserByEmail) {
-      // Generate new verification token for existing user
-      verificationToken = crypto.randomBytes(32).toString('hex')
-      // Update the existing user's verification token
-      await prisma.users.update({
-        where: { id: existingUserByEmail.id },
-        data: {
-          verificationToken: verificationToken,
-          emailVerification: false // Reset verification status
-        }
-      })
-    } else if (sendInvitationEmail && role === 'VENDOR') {
-      // Generate a random password for admin-created vendors
-      const randomPassword = crypto.randomBytes(12).toString('base64').replace(/[^a-zA-Z0-9]/g, '')
-      hashedPassword = await bcrypt.hash(randomPassword, 12)
-      verificationToken = crypto.randomBytes(32).toString('hex')
-    } else if (password) {
-      hashedPassword = await bcrypt.hash(password, 12)
-      // Generate verification token for all users with passwords (except auto-verified)
-      if (role === 'VENDOR' || generateVerificationToken) {
-        verificationToken = crypto.randomBytes(32).toString('hex')
-      }
-    } else if (generateVerificationToken) {
-      // Generate verification token for users without passwords
-      verificationToken = crypto.randomBytes(32).toString('hex')
+  } else {
+    // Authenticated request (for server-side)
+    try {
+      const user = await authenticateRequest(request)
+      return Response.json({ success: true, user })
+    } catch (error) {
+      console.error('Authentication error:', error)
+      return Response.json({ error: 'Unauthorized' }, { status: 401 })
     }
-
-    // Create new user (skip if resending verification)
-    let user
-    if (resendVerification === true && existingUserByEmail) {
-      user = existingUserByEmail
-    } else {
-      user = await prisma.users.create({
-        data: {
-          uid: uid || `temp_${Date.now()}`, // Use temp UID for vendors, will be updated when they set password
-          username,
-          email,
-          phoneNumber,
-          password: hashedPassword,
-          role: userRole,
-          type: type || 'firebase',
-          emailVerification: sendInvitationEmail && role === 'VENDOR' ? true : (password && !generateVerificationToken ? true : false), // Auto-verify admin-created vendors and users without verification tokens
-          verificationToken: verificationToken
-        }
-      })
-    }
-
-    // Send verification email for all user types who need verification
-    if (verificationToken && (!user.emailVerification || resendVerification === true)) {
-      try {
-        let emailResult
-        
-        // For resend, use the user's actual role from database
-        const userRoleForEmail = resendVerification === true ? user.role : role
-        
-        if (userRoleForEmail === 'VENDOR') {
-          // Use vendor-specific email for vendors
-          emailResult = await sendVendorInvitationEmail(email, username, verificationToken)
-        } else {
-          // Use general verification email for other roles
-          emailResult = await sendVerificationEmail(email, username, verificationToken, userRoleForEmail)
-        }
-        
-        // If that fails, try a simple email
-        if (!emailResult.success) {
-          const verificationUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify?token=${verificationToken}&email=${encodeURIComponent(email)}&role=${userRoleForEmail}`
-          await sendTestEmail(
-            email, 
-            'Verify Your Email - Quick Delivery',
-            `Hello ${username},\n\nPlease click the link below to verify your email and activate your account:\n\n${verificationUrl}\n\nThis link will expire in 24 hours.\n\nBest regards,\nQuick Delivery Team`
-          )
-        }
-      } catch (emailError) {
-        console.error('Error sending verification email:', emailError)
-        // Don't fail the request if email fails
-      }
-    }
-
-    return Response.json({ 
-      success: true, 
-      user,
-      message: sendInvitationEmail ? 'User created successfully and invitation email sent' : 'User created successfully' 
-    })
-  } catch (error) {
-    console.error('Error creating user:', error.message)
-    return Response.json({ 
-      success: false, 
-      error: error.message,
-      code: 'USER_CREATION_ERROR'
-    }, { status: 500 })
   }
 }
 
-export async function GET(request) {
+export async function POST(request) {
   try {
-    const { searchParams } = new URL(request.url)
-    const uid = searchParams.get('uid')
-    const email = searchParams.get('email')
-    const role = searchParams.get('role')
+    const { uid, username, email, phoneNumber, role = 'CUSTOMER', type = 'user' } = await request.json()
+    
+    if (!uid || !email) {
+      return Response.json({ 
+        success: false, 
+        error: 'UID and email are required' 
+      }, { status: 400 })
+    }
 
-    if (uid) {
-      // Fetch specific user by UID
-      const user = await prisma.users.findUnique({
-        where: { uid },
-        include: {
-          productsAsVendor: {
-            include: {
-              category: true,
-              subCategory: true
-            }
-          }
-        }
-      })
-
-      if (!user) {
-        return Response.json({ 
-          success: false, 
-          error: 'User not found',
-          code: 'USER_NOT_FOUND'
-        }, { status: 404 })
+    // Check if user already exists by UID or email
+    const existingUser = await prisma.users.findFirst({
+      where: {
+        OR: [
+          { uid },
+          { email }
+        ]
       }
+    })
 
-      return Response.json({ 
-        success: true, 
-        user 
-      })
-    } else if (email) {
-      // Fetch specific user by email
-      const user = await prisma.users.findUnique({
-        where: { email },
-        include: {
-          productsAsVendor: {
-            include: {
-              category: true,
-              subCategory: true
-            }
+    if (existingUser) {
+      // Update existing user with new UID if needed
+      if (existingUser.uid !== uid) {
+        const updatedUser = await prisma.users.update({
+          where: { id: existingUser.id },
+          data: {
+            uid,
+            username: username || existingUser.username,
+            phoneNumber: phoneNumber || existingUser.phoneNumber,
+            role: role || existingUser.role,
+            type: type || existingUser.type
           }
-        }
-      })
-
-      if (!user) {
+        })
         return Response.json({ 
-          success: false, 
-          error: 'User not found',
-          code: 'USER_NOT_FOUND'
-        }, { status: 404 })
+          success: true, 
+          user: updatedUser,
+          message: 'User updated successfully'
+        })
       }
-
+      
       return Response.json({ 
         success: true, 
-        user 
-      })
-    } else if (role) {
-      // Fetch users by role
-      const users = await prisma.users.findMany({
-        where: { role },
-        include: {
-          productsAsVendor: {
-            include: {
-              category: true,
-              subCategory: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-
-      return Response.json({ 
-        success: true, 
-        data: users 
-      })
-    } else {
-      // Fetch all users
-      const users = await prisma.users.findMany({
-        include: {
-          productsAsVendor: {
-            include: {
-              category: true,
-              subCategory: true
-            }
-          }
-        },
-        orderBy: { createdAt: 'desc' }
-      })
-
-      return Response.json({ 
-        success: true, 
-        data: users 
+        user: existingUser,
+        message: 'User already exists'
       })
     }
+
+    // Create new user
+    const user = await prisma.users.create({
+      data: {
+        uid,
+        username: username || email.split('@')[0],
+        email,
+        phoneNumber: phoneNumber || '',
+        role,
+        emailVerification: false,
+        type
+      }
+    })
+
+    return Response.json({ success: true, user })
   } catch (error) {
-    console.error('Error fetching users:', error.message)
+    console.error('User creation error:', error)
     return Response.json({ 
       success: false, 
-      error: error.message,
-      code: 'SERVER_ERROR'
+      error: error.message 
     }, { status: 500 })
   }
 }
 
 export async function PUT(request) {
   try {
-    const { uid, emailVerification, username, phoneNumber, role } = await request.json()
-
-    const updateData = {}
-    if (emailVerification !== undefined) updateData.emailVerification = emailVerification
-    if (username) updateData.username = username
-    if (phoneNumber) updateData.phoneNumber = phoneNumber
-    if (role) updateData.role = role
+    const { uid, emailVerification } = await request.json()
+    
+    if (!uid) {
+      return Response.json({ 
+        success: false, 
+        error: 'UID is required' 
+      }, { status: 400 })
+    }
 
     const user = await prisma.users.update({
       where: { uid },
-      data: updateData
+      data: { emailVerification }
     })
 
-    return Response.json({ 
-      success: true, 
-      user 
-    })
+    return Response.json({ success: true, user })
   } catch (error) {
-    console.error('Error updating user:', error)
+    console.error('User update error:', error)
     return Response.json({ 
       success: false, 
       error: error.message 
@@ -320,7 +137,7 @@ export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url)
     const uid = searchParams.get('uid')
-
+    
     if (!uid) {
       return Response.json({ 
         success: false, 
@@ -328,39 +145,13 @@ export async function DELETE(request) {
       }, { status: 400 })
     }
 
-    // Check if user has products
-    const userWithProducts = await prisma.users.findUnique({
-      where: { uid },
-      include: {
-        productsAsVendor: true
-      }
-    })
-
-    if (!userWithProducts) {
-      return Response.json({ 
-        success: false, 
-        error: 'User not found' 
-      }, { status: 404 })
-    }
-
-    if (userWithProducts.productsAsVendor.length > 0) {
-      return Response.json({ 
-        success: false, 
-        error: 'Cannot delete vendor with existing products. Please transfer or delete products first.' 
-      }, { status: 400 })
-    }
-
-    // Delete the user
     await prisma.users.delete({
       where: { uid }
     })
 
-    return Response.json({ 
-      success: true, 
-      message: 'User deleted successfully' 
-    })
+    return Response.json({ success: true })
   } catch (error) {
-    console.error('Error deleting user:', error)
+    console.error('User deletion error:', error)
     return Response.json({ 
       success: false, 
       error: error.message 

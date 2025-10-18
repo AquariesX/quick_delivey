@@ -1,220 +1,131 @@
 'use client'
 
-import { motion } from 'framer-motion'
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
-import AuthCard from '@/components/auth/AuthCard'
-import LoginForm from '@/components/auth/LoginForm'
-import EmailVerification from '@/components/auth/EmailVerification'
-import { LogIn, UserPlus, ArrowLeft } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+import { motion } from 'framer-motion'
+import { Mail, Lock, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 
 export default function LoginPage() {
-  const [isLogin, setIsLogin] = useState(true)
-  const { user, userData, loading } = useAuth()
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  
+  const { signIn } = useAuth()
   const router = useRouter()
 
-  // Redirect if already authenticated and verified
-  if (user && user.emailVerified && userData) {
-    router.push('/dashboard')
-    return null
-  }
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
 
-  // If user exists but no userData, they might be in an invalid state
-  // This can happen if Firebase user exists but database user doesn't
-  if (user && !userData && !loading) {
-    console.log('User exists but no userData found, showing login form')
-  }
-
-  // Show email verification if user exists but not verified AND userData exists
-  if (user && !user.emailVerified && userData) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-        {/* Background Animation */}
-        <div className="absolute inset-0 overflow-hidden">
-          <motion.div
-            animate={{
-              x: [0, 100, 0],
-              y: [0, -100, 0],
-            }}
-            transition={{
-              duration: 20,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute top-0 left-0 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-purple-200/30 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{
-              x: [0, -100, 0],
-              y: [0, 100, 0],
-            }}
-            transition={{
-              duration: 25,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-r from-pink-200/30 to-blue-200/30 rounded-full blur-3xl"
-          />
-        </div>
-
-        <div className="relative z-10 w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <div className="text-center mb-6">
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Email Verification Required</h2>
-              <p className="text-gray-600">Please verify your email to continue</p>
-            </div>
-            
-            <EmailVerification />
-            
-            <div className="mt-6 text-center">
-              <p className="text-gray-500 text-sm mb-3">Having trouble?</p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => {
-                  // Sign out the user and refresh the page
-                  import('@/lib/firebase').then(({ auth }) => {
-                    import('firebase/auth').then(({ signOut }) => {
-                      signOut(auth).then(() => {
-                        window.location.reload()
-                      })
-                    })
-                  })
-                }}
-                className="text-blue-600 hover:text-blue-700 font-medium text-sm"
-              >
-                Sign out and try again
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full"
-        />
-      </div>
-    )
+    try {
+      const result = await signIn(email, password)
+      if (result.success) {
+        router.push('/dashboard')
+      }
+    } catch (error) {
+      console.error('Login error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
-      {/* Background Animation */}
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="w-full max-w-md">
         <motion.div
-          animate={{
-            x: [0, 100, 0],
-            y: [0, -100, 0],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute top-0 left-0 w-72 h-72 bg-gradient-to-r from-blue-200/30 to-purple-200/30 rounded-full blur-3xl"
-        />
-        <motion.div
-          animate={{
-            x: [0, -100, 0],
-            y: [0, 100, 0],
-          }}
-          transition={{
-            duration: 25,
-            repeat: Infinity,
-            ease: "linear"
-          }}
-          className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-r from-pink-200/30 to-blue-200/30 rounded-full blur-3xl"
-        />
-      </div>
-
-      {/* Main Content */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-md mx-auto relative z-10"
-      >
-        <AuthCard>
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-2xl shadow-xl p-8"
+        >
           {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2, duration: 0.5 }}
-            className="text-center mb-8"
-          >
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.8 }}
-              className="w-20 h-20 rounded-full mx-auto mb-4 bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center"
-            >
-              <LogIn className="w-10 h-10 text-white" />
-            </motion.div>
-            
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">
-              Welcome Back
-            </h1>
-            <p className="text-gray-600">
-              Sign in to your account to continue
-            </p>
-          </motion.div>
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+              <Mail className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
+            <p className="text-gray-600">Sign in to your Quick Delivery account</p>
+          </div>
 
           {/* Login Form */}
-          <LoginForm />
-
-          {/* Vendor Setup Help */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
-            className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg"
-          >
-            <div className="flex items-start space-x-3">
-              <div className="flex-shrink-0">
-                <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">i</span>
-                </div>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-sm font-medium text-blue-800 mb-1">
-                  Vendor Account Setup
-                </h3>
-                <p className="text-sm text-blue-700">
-                  If you received an invitation email, please complete your account setup by setting your password first before logging in.
-                </p>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your email"
+                  required
+                />
               </div>
             </div>
-          </motion.div>
 
-          {/* Switch to Register */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4, duration: 0.5 }}
-            className="mt-6 text-center"
-          >
-            <p className="text-gray-600 mb-4">
-              Don&apos;t have an account?
-            </p>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
+
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/register')}
-              className="inline-flex items-center space-x-2 text-blue-600 hover:text-blue-700 font-semibold transition-colors duration-200"
+              type="submit"
+              disabled={loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <UserPlus className="w-5 h-5" />
-              <span>Create Account</span>
+              {loading ? 'Signing In...' : 'Sign In'}
             </motion.button>
-          </motion.div>
-        </AuthCard>
-      </motion.div>
+          </form>
+
+          {/* Footer */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 mb-4">
+              Don&apos;t have an account?{' '}
+              <button
+                onClick={() => router.push('/register')}
+                className="text-blue-600 hover:text-blue-700 font-medium"
+              >
+                Sign up here
+              </button>
+            </p>
+            
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center justify-center text-gray-500 hover:text-gray-700 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Home
+            </button>
+          </div>
+        </motion.div>
+      </div>
     </div>
   )
 }

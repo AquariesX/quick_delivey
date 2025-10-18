@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, Suspense, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle, XCircle, Mail, ArrowLeft, Loader2 } from 'lucide-react'
+import { CheckCircle, XCircle, Mail, Loader2 } from 'lucide-react'
 
-function VerifyEmailContent() {
+function EmailVerificationContent() {
   const [step, setStep] = useState('verifying') // 'verifying', 'success', 'error'
   const [message, setMessage] = useState('')
   const [userInfo, setUserInfo] = useState(null)
@@ -14,18 +14,8 @@ function VerifyEmailContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   
-  const token = searchParams.get('token')
-  const email = searchParams.get('email')
-  const role = searchParams.get('role') || 'USER'
-
-  useEffect(() => {
-    if (token && email) {
-      verifyEmail()
-    } else {
-      setStep('error')
-      setMessage('Invalid verification link. Missing token or email.')
-    }
-  }, [token, email, verifyEmail])
+  const oobCode = searchParams.get('oobCode')
+  const mode = searchParams.get('mode')
 
   const verifyEmail = useCallback(async () => {
     try {
@@ -37,11 +27,7 @@ function VerifyEmailContent() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          token,
-          email,
-          role
-        })
+        body: JSON.stringify({ oobCode })
       })
 
       const result = await response.json()
@@ -66,7 +52,16 @@ function VerifyEmailContent() {
     } finally {
       setLoading(false)
     }
-  }, [token, email, role, router])
+  }, [oobCode])
+
+  useEffect(() => {
+    if (mode === 'verifyEmail' && oobCode) {
+      verifyEmail()
+    } else {
+      setStep('error')
+      setMessage('Invalid verification link. Missing required parameters.')
+    }
+  }, [oobCode, mode, verifyEmail])
 
   const renderVerifyingStep = () => (
     <motion.div
@@ -173,25 +168,13 @@ function VerifyEmailContent() {
             {step === 'success' && renderSuccessStep()}
             {step === 'error' && renderErrorStep()}
           </AnimatePresence>
-
-          <div className="mt-8 pt-6 border-t border-gray-200">
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => router.push('/')}
-              className="w-full flex items-center justify-center text-gray-600 hover:text-gray-800 transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Home
-            </motion.button>
-          </div>
         </motion.div>
       </div>
     </div>
   )
 }
 
-export default function VerifyEmailPage() {
+export default function EmailVerificationPage() {
   return (
     <Suspense fallback={
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
@@ -208,7 +191,7 @@ export default function VerifyEmailPage() {
         </div>
       </div>
     }>
-      <VerifyEmailContent />
+      <EmailVerificationContent />
     </Suspense>
   )
 }

@@ -5,6 +5,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
 import { uploadMultipleImages } from '@/lib/imageUpload'
+import { parseProductImages, getFirstProductImage, hasProductImages } from '@/lib/imageUtils'
 import NextImage from 'next/image'
 import { 
   Package, 
@@ -613,9 +614,9 @@ const VendorProductManagement = () => {
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                        {product.proImages && Array.isArray(product.proImages) && product.proImages.length > 0 ? (
+                        {hasProductImages(product.proImages) ? (
                           <NextImage 
-                            src={product.proImages[0]} 
+                            src={getFirstProductImage(product.proImages)} 
                             alt={product.proName}
                             width={48}
                             height={48}
@@ -626,7 +627,7 @@ const VendorProductManagement = () => {
                             }}
                           />
                         ) : null}
-                        <div className={`w-full h-full flex items-center justify-center ${product.proImages && Array.isArray(product.proImages) && product.proImages.length > 0 ? 'hidden' : 'flex'}`}>
+                        <div className={`w-full h-full flex items-center justify-center ${hasProductImages(product.proImages) ? 'hidden' : 'flex'}`}>
                           <Package className="w-6 h-6 text-gray-400" />
                         </div>
                       </div>

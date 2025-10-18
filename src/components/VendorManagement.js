@@ -77,7 +77,7 @@ const VendorManagement = () => {
   const fetchVendors = async () => {
     try {
       setRefreshing(true)
-      const response = await fetch('/api/users')
+      const response = await fetch('/api/users/all')
       const result = await response.json()
       
       if (result.success) {

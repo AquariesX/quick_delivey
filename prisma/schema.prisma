@@ -1,6 +1,3 @@
-  // This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -10,7 +7,111 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Enums
+model Users {
+  id                 String    @id @default(cuid())
+  uid                String    @unique
+  username           String
+  email              String    @unique
+  phoneNumber        String
+  role               UserRole  @default(CUSTOMER)
+  emailVerification  Boolean   @default(false) @map("email_verification")
+  type               String?
+  createdAt          DateTime  @default(now()) @map("createdAt")
+  updatedAt          DateTime  @updatedAt @map("updatedAt")
+  password           String?
+  passwordResetToken String?   @map("password_reset_token")
+  verificationToken  String?   @map("verification_token")
+  productsAsApprover Product[] @relation("ApproverProducts")
+  productsAsCreator  Product[] @relation("CreatorProducts")
+  productsAsVendor   Product[] @relation("VendorProducts")
+
+  @@map("users")
+}
+
+model Category {
+  id            String         @id @default(cuid())
+  name          String
+  code          String         @unique
+  description   String?
+  status        CategoryStatus @default(ACTIVE)
+  createdBy     String         @map("createdBy")
+  createdAt     DateTime       @default(now()) @map("createdAt")
+  updatedAt     DateTime       @updatedAt @map("updatedAt")
+  products      Product[]
+  subCategories SubCategory[]
+
+  @@map("categories")
+}
+
+model SubCategory {
+  subCatId   Int       @id @default(autoincrement()) @map("sub_cat_id")
+  subCatCode String    @unique @map("sub_cat_code") @db.VarChar(50)
+  subCatName String    @map("sub_cat_name") @db.VarChar(255)
+  status     Boolean   @default(true)
+  catId      String    @map("cat_id")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  products   Product[]
+  category   Category  @relation(fields: [catId], references: [id], onDelete: Cascade)
+
+  @@index([catId], map: "sub_categories_cat_id_fkey")
+  @@map("sub_categories")
+}
+
+model Product {
+  description       String?        @db.Text
+  price             Decimal        @db.Decimal(10, 2)
+  sku               String         @unique @db.VarChar(100)
+  barcode           String?        @unique @db.VarChar(100)
+  status            Boolean        @default(true)
+  approvalStatus    ApprovalStatus @default(Pending) @map("approval_status")
+  approveById       String?        @map("approve_by")
+  catId             String         @map("cat_id")
+  cost              Decimal        @db.Decimal(10, 2)
+  createdAt         DateTime       @default(now()) @map("created_at")
+  createdById       String         @map("created_by")
+  discount          Decimal        @default(0.00) @db.Decimal(5, 2)
+  proId             Int            @id @default(autoincrement()) @map("pro_id")
+  proImages         String?        @map("pro_images") @db.LongText
+  proName           String         @map("pro_name") @db.VarChar(255)
+  qnty              Int            @default(0)
+  stock             Int            @default(0)
+  subCatId          Int            @map("sub_cat_id")
+  updatedAt         DateTime       @updatedAt @map("updated_at")
+  vendorId          String         @map("vendor_id")
+  brandName         String?        @map("brand_name") @db.VarChar(255)
+  conditionType     String?        @map("condition_type") @db.VarChar(50)
+  currency          String?        @default("USD") @db.VarChar(10)
+  ingredients       String?        @db.Text
+  keyFeatures       String?        @map("key_features") @db.LongText
+  manufacturer      String?        @db.VarChar(255)
+  modelNumber       String?        @map("model_number") @db.VarChar(100)
+  packageWeight     String?        @map("package_weight") @db.VarChar(100)
+  productDimensions String?        @map("product_dimensions") @db.VarChar(255)
+  productType       String?        @map("product_type") @db.VarChar(100)
+  reviews           String?        @db.LongText
+  saleEndDate       DateTime?      @map("sale_end_date")
+  salePrice         Decimal?       @map("sale_price") @db.Decimal(10, 2)
+  saleStartDate     DateTime?      @map("sale_start_date")
+  sizeName          String?        @map("size_name") @db.VarChar(100)
+  variations        String?        @db.LongText
+  warranty          String?        @db.VarChar(255)
+  color             String?        @db.VarChar(100)
+  size              String?        @db.VarChar(100)
+  approver          Users?         @relation("ApproverProducts", fields: [approveById], references: [uid])
+  category          Category       @relation(fields: [catId], references: [id], onDelete: Cascade)
+  creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
+  subCategory       SubCategory    @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
+  vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
+
+  @@index([approveById], map: "products_approve_by_fkey")
+  @@index([catId], map: "products_cat_id_fkey")
+  @@index([createdById], map: "products_created_by_fkey")
+  @@index([subCatId], map: "products_sub_cat_id_fkey")
+  @@index([vendorId], map: "products_vendor_id_fkey")
+  @@map("products")
+}
+
 enum UserRole {
   ADMIN
   SUPER_ADMIN
@@ -28,114 +129,4 @@ enum ApprovalStatus {
 enum CategoryStatus {
   ACTIVE
   INACTIVE
-}
-
-// Models
-model Users {
-  id                String      @id @default(cuid()) @db.VarChar(191)
-  uid               String      @unique @db.VarChar(191)
-  username          String      @db.VarChar(191)
-  email             String      @unique @db.VarChar(191)
-  phoneNumber       String      @db.VarChar(191)
-  password          String?     @db.VarChar(191)
-  role              UserRole    @default(CUSTOMER)
-  emailVerification Boolean     @default(false) @map("email_verification")
-  verificationToken String?     @map("verification_token") @db.VarChar(191)
-  passwordResetToken String?    @map("password_reset_token") @db.VarChar(191)
-  type              String?     @db.VarChar(191)
-  createdAt         DateTime    @default(now()) @map("createdAt")
-  updatedAt         DateTime    @updatedAt @map("updatedAt")
-
-  // Relations
-  productsAsVendor   Product[]   @relation("VendorProducts")
-  productsAsApprover Product[]   @relation("ApproverProducts")
-  productsAsCreator  Product[]   @relation("CreatorProducts")
-
-  @@map("users")
-}
-
-model Category {
-  id          String        @id @default(cuid()) @db.VarChar(191)
-  name        String        @db.VarChar(191)
-  code        String        @unique @db.VarChar(191)
-  description String?       @db.VarChar(191)
-  status      CategoryStatus @default(ACTIVE)
-  createdBy   String        @map("createdBy") @db.VarChar(191)
-  createdAt   DateTime      @default(now()) @map("createdAt")
-  updatedAt   DateTime      @updatedAt @map("updatedAt")
-
-  // Relations
-  subCategories SubCategory[]
-  products      Product[]
-
-  @@map("categories")
-}
-
-model SubCategory {
-  subCatId   Int      @id @default(autoincrement()) @map("sub_cat_id")
-  subCatCode String   @unique @map("sub_cat_code") @db.VarChar(50)
-  subCatName String   @map("sub_cat_name") @db.VarChar(255)
-  status     Boolean  @default(true)
-  catId      String   @map("cat_id") @db.VarChar(191)
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
-
-  // Relations
-  category Category @relation(fields: [catId], references: [id], onDelete: Cascade)
-  products Product[]
-
-  @@map("sub_categories")
-}
-
-model Product {
-  proId           Int            @id @default(autoincrement()) @map("pro_id")
-  proName         String         @map("pro_name") @db.VarChar(255)
-  description     String?        @db.Text
-  catId           String         @map("cat_id") @db.VarChar(191)
-  subCatId        Int            @map("sub_cat_id")
-  price           Decimal        @db.Decimal(10, 2)
-  cost            Decimal        @db.Decimal(10, 2)
-  discount        Decimal        @default(0) @db.Decimal(5, 2)
-  sku             String         @unique @db.VarChar(100)
-  barcode         String?        @unique @db.VarChar(100)
-  qnty            Int            @default(0)
-  stock           Int            @default(0)
-  proImages       Json?          @map("pro_images")
-  vendorId        String         @map("vendor_id") @db.VarChar(191)
-  status          Boolean        @default(true)
-  approvalStatus  ApprovalStatus @default(Pending) @map("approval_status")
-  approveById     String?        @map("approve_by") @db.VarChar(191)
-  createdById     String         @map("created_by") @db.VarChar(191)
-  createdAt       DateTime       @default(now()) @map("created_at")
-  updatedAt       DateTime       @updatedAt @map("updated_at")
-
-  // New Product Fields
-  brandName           String?   @map("brand_name") @db.VarChar(255)
-  manufacturer        String?   @db.VarChar(255)
-  keyFeatures         Json?     @map("key_features") // Array of bullet points
-  productType         String?   @map("product_type") @db.VarChar(100)
-  variations          Json?     // Object with size, color, flavor, etc.
-  sizeName            String?   @map("size_name") @db.VarChar(100)
-  modelNumber         String?   @map("model_number") @db.VarChar(100)
-  productDimensions   String?   @map("product_dimensions") @db.VarChar(255)
-  packageWeight       String?   @map("package_weight") @db.VarChar(100)
-  salePrice           Decimal?  @map("sale_price") @db.Decimal(10, 2)
-  saleStartDate       DateTime? @map("sale_start_date")
-  saleEndDate         DateTime? @map("sale_end_date")
-  currency            String?   @default("USD") @db.VarChar(10)
-  conditionType       String?   @map("condition_type") @db.VarChar(50)
-  warranty            String?   @db.VarChar(255)
-  ingredients         String?   @db.Text
-  reviews             Json?     // Array of review objects
-  size                String?   @db.VarChar(100)
-  color               String?   @db.VarChar(100)
-
-  // Relations
-  category   Category   @relation(fields: [catId], references: [id], onDelete: Cascade)
-  subCategory SubCategory @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
-  vendor     Users      @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
-  approver   Users?     @relation("ApproverProducts", fields: [approveById], references: [uid], onDelete: SetNull)
-  creator    Users      @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
-
-  @@map("products")
 }

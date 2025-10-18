@@ -12,11 +12,17 @@ export default function DashboardPage() {
   const router = useRouter()
 
   useEffect(() => {
-    if (!loading) {
+    if (!loading && user) {
       const verification = checkUserVerification(user, userData)
       
-      if (!verification.isVerified) {
-        router.push('/login')
+      // Only redirect if we're sure the user is not verified
+      // Don't redirect if we're still loading userData
+      if (!verification.isVerified && verification.reason !== 'Loading user data') {
+        if (verification.reason === 'Database verification pending') {
+          router.push('/verify')
+        } else {
+          router.push('/login')
+        }
         return
       }
     }
@@ -32,12 +38,24 @@ export default function DashboardPage() {
 
   const verification = checkUserVerification(user, userData)
   
+  // Show loading if we're still loading userData
+  if (!verification.isVerified && verification.reason === 'Loading user data') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading user data...</p>
+        </div>
+      </div>
+    )
+  }
+  
   if (!verification.isVerified) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Redirecting to login...</p>
+          <p className="text-gray-600">Redirecting...</p>
         </div>
       </div>
     )

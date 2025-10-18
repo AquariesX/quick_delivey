@@ -1,51 +1,86 @@
-// Unified verification helper function
-export const checkUserVerification = (user, userData) => {
-  if (!user || !userData) {
-    return { isVerified: false, reason: 'missing_user_data' }
-  }
+// Client-side authentication helpers
+// This file only contains functions that can run in the browser
 
-  const userRole = userData.role || 'CUSTOMER'
-  
-  // For vendors, check database verification status
-  if (userRole === 'VENDOR') {
-    return {
-      isVerified: userData.emailVerification === true,
-      reason: userData.emailVerification ? 'verified' : 'vendor_not_verified'
-    }
+// Check if user is verified and has proper data
+export function checkUserVerification(user, userData) {
+  if (!user) {
+    return { isVerified: false, reason: 'No user' }
   }
   
-  // For other users, check Firebase email verification
-  return {
-    isVerified: user.emailVerified === true,
-    reason: user.emailVerified ? 'verified' : 'firebase_not_verified'
+  // Check database verification first (more reliable)
+  if (userData && userData.emailVerification) {
+    return { isVerified: true, reason: 'Database verified' }
   }
+  
+  // Fallback to Firebase verification
+  if (user.emailVerified) {
+    return { isVerified: true, reason: 'Firebase verified' }
+  }
+  
+  // If we have userData but not verified, show pending
+  if (userData && !userData.emailVerification) {
+    return { isVerified: false, reason: 'Database verification pending' }
+  }
+  
+  // If no userData yet, show loading
+  if (!userData) {
+    return { isVerified: false, reason: 'Loading user data' }
+  }
+  
+  return { isVerified: false, reason: 'Email not verified' }
 }
 
-// Unified access control helper
-export const checkUserAccess = (user, userData, requiredRoles = []) => {
-  const verification = checkUserVerification(user, userData)
-  
-  if (!verification.isVerified) {
-    return {
-      hasAccess: false,
-      reason: verification.reason,
-      redirectTo: '/login'
-    }
-  }
+// Get user role for client-side use
+export function getUserRole(userData) {
+  return userData?.role || 'CUSTOMER'
+}
 
-  const userRole = userData?.role || 'CUSTOMER'
-  
-  if (requiredRoles.length > 0 && !requiredRoles.includes(userRole)) {
-    return {
-      hasAccess: false,
-      reason: 'insufficient_permissions',
-      redirectTo: '/dashboard'
-    }
-  }
+// Check if user has specific role
+export function hasRole(userData, requiredRole) {
+  return userData?.role === requiredRole
+}
 
-  return {
-    hasAccess: true,
-    reason: 'verified',
-    redirectTo: null
+// Check user access for specific roles
+export function checkUserAccess(user, userData, allowedRoles) {
+  if (!user) {
+    return { hasAccess: false, redirectTo: '/login', reason: 'No user' }
   }
+  
+  if (!user.emailVerified) {
+    return { hasAccess: false, redirectTo: '/verify', reason: 'Email not verified' }
+  }
+  
+  if (!userData) {
+    return { hasAccess: false, redirectTo: '/login', reason: 'No user data' }
+  }
+  
+  if (!userData.emailVerification) {
+    return { hasAccess: false, redirectTo: '/verify', reason: 'Database verification pending' }
+  }
+  
+  if (!allowedRoles.includes(userData.role)) {
+    return { hasAccess: false, redirectTo: '/dashboard', reason: 'Insufficient permissions' }
+  }
+  
+  return { hasAccess: true, reason: 'Access granted' }
+}
+
+// Check if user is admin
+export function isAdmin(userData) {
+  return hasRole(userData, 'ADMIN')
+}
+
+// Check if user is vendor
+export function isVendor(userData) {
+  return hasRole(userData, 'VENDOR')
+}
+
+// Check if user is customer
+export function isCustomer(userData) {
+  return hasRole(userData, 'CUSTOMER')
+}
+
+// Check if user is driver
+export function isDriver(userData) {
+  return hasRole(userData, 'DRIVER')
 }
