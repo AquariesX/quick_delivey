@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle, XCircle, Mail, ArrowLeft, Loader2 } from 'lucide-react'
@@ -25,9 +25,9 @@ function VerifyEmailContent() {
       setStep('error')
       setMessage('Invalid verification link. Missing token or email.')
     }
-  }, [token, email])
+  }, [token, email, verifyEmail])
 
-  const verifyEmail = async () => {
+  const verifyEmail = useCallback(async () => {
     try {
       setLoading(true)
       setStep('verifying')
@@ -61,7 +61,7 @@ function VerifyEmailContent() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [token, email, role])
 
   const renderVerifyingStep = () => (
     <motion.div
@@ -184,5 +184,23 @@ function VerifyEmailContent() {
 }
 
 export default function VerifyEmailPage() {
-  return <VerifyEmailContent />
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-xl p-8">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">Loading...</h2>
+              <p className="text-gray-600">Please wait while we prepare the verification page.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyEmailContent />
+    </Suspense>
+  )
 }

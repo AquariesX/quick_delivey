@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { auth } from '@/lib/firebase'
 import { 
   signInWithEmailAndPassword, 
@@ -54,7 +54,7 @@ export default function AuthContextProvider({ children }) {
   }
 
   // Create user in database
-  const createUserInDatabase = async (firebaseUser, username, phoneNumber, role, type) => {
+  const createUserInDatabase = useCallback(async (firebaseUser, username, phoneNumber, role, type) => {
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
@@ -93,7 +93,7 @@ export default function AuthContextProvider({ children }) {
       console.error('Error creating user:', error.message)
       return null
     }
-  }
+  }, [])
 
   // Update email verification status
   const updateEmailVerification = async (uid, verified) => {
@@ -211,7 +211,7 @@ export default function AuthContextProvider({ children }) {
     })
 
     return () => unsubscribe()
-  }, [emailVerificationSent])
+  }, [emailVerificationSent, createUserInDatabase])
 
   const signUp = async (email, password, username, phoneNumber, role, type) => {
     try {
