@@ -50,6 +50,11 @@ function VerifyEmailContent() {
         setStep('success')
         setMessage(result.message)
         setUserInfo(result.user)
+        
+        // Auto-redirect to login after 3 seconds
+        setTimeout(() => {
+          router.push('/login')
+        }, 3000)
       } else {
         setStep('error')
         setMessage(result.error || 'Verification failed')
@@ -61,7 +66,7 @@ function VerifyEmailContent() {
     } finally {
       setLoading(false)
     }
-  }, [token, email, role])
+  }, [token, email, role, router])
 
   const renderVerifyingStep = () => (
     <motion.div
@@ -87,7 +92,10 @@ function VerifyEmailContent() {
         <CheckCircle className="w-8 h-8 text-green-600" />
       </div>
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Email Verified!</h2>
-      <p className="text-gray-600 mb-6">{message}</p>
+      <p className="text-gray-600 mb-4">{message}</p>
+      <p className="text-sm text-blue-600 mb-6">
+        You will be automatically redirected to the login page in a few seconds...
+      </p>
       
       {userInfo && (
         <div className="bg-gray-50 rounded-lg p-4 mb-6">
