@@ -73,7 +73,8 @@ const RegisterForm = () => {
             uid: null, // Will be set when vendor sets password
             role: 'VENDOR',
             password: formData.password, // Include password for direct vendor registration
-            type: formData.type || 'firebase'
+            type: formData.type || 'firebase',
+            generateVerificationToken: true // Generate verification token for email verification
           })
         })
         

@@ -6,7 +6,7 @@ import crypto from 'crypto'
 
 export async function POST(request) {
   try {
-    const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail, generateVerificationToken } = await request.json()
+    const { uid, username, email, phoneNumber, role, type, password, sendInvitationEmail, generateVerificationToken, resendVerification } = await request.json()
 
     // Validate required fields
     if (!uid && role !== 'VENDOR') {
@@ -88,7 +88,7 @@ export async function POST(request) {
     let hashedPassword = null
     
     // Handle resend verification case
-    if (resendVerification && existingUserByEmail) {
+    if (resendVerification === true && existingUserByEmail) {
       // Generate new verification token for existing user
       verificationToken = crypto.randomBytes(32).toString('hex')
       // Update the existing user's verification token
@@ -117,7 +117,7 @@ export async function POST(request) {
 
     // Create new user (skip if resending verification)
     let user
-    if (resendVerification && existingUserByEmail) {
+    if (resendVerification === true && existingUserByEmail) {
       user = existingUserByEmail
     } else {
       user = await prisma.users.create({
@@ -136,12 +136,12 @@ export async function POST(request) {
     }
 
     // Send verification email for all user types who need verification
-    if (verificationToken && (!emailVerification || resendVerification)) {
+    if (verificationToken && (!emailVerification || resendVerification === true)) {
       try {
         let emailResult
         
         // For resend, use the user's actual role from database
-        const userRoleForEmail = resendVerification ? user.role : role
+        const userRoleForEmail = resendVerification === true ? user.role : role
         
         if (userRoleForEmail === 'VENDOR') {
           // Use vendor-specific email for vendors
