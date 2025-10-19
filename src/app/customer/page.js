@@ -37,7 +37,7 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!loading && user) {
+    if (user && userData) {
       const access = checkUserAccess(user, userData, ['CUSTOMER'])
       
       if (!access.hasAccess) {
@@ -57,7 +57,7 @@ const CustomerDashboard = () => {
       // Customer - stay on customer page
       setLoading(false)
     }
-  }, [user, userData, loading, router])
+  }, [user, userData, router])
 
   const handleSignOut = async () => {
     try {
@@ -98,11 +98,6 @@ const CustomerDashboard = () => {
   }
 
   const renderContent = () => {
-    console.log('Rendering content for tab:', activeTab)
-    console.log('Search query:', searchQuery)
-    console.log('Cart items:', cartItems.length)
-    console.log('Favorites:', favorites.length)
-    
     switch (activeTab) {
       case 'products':
         return (

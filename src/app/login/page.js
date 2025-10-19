@@ -16,76 +16,35 @@ export default function LoginPage() {
   const { signIn, user, userData, loading: authLoading, logout } = useAuth()
   const router = useRouter()
 
-  // DISABLED: Automatic redirection - only redirect after manual login
-  // useEffect(() => {
-  //   console.log('Login page useEffect triggered:', { authLoading, user: !!user, userData: !!userData })
-  //   
-  //   if (!authLoading && user && userData) {
-  //     const userRole = getUserRole(userData)
-  //     console.log('User role detected:', userRole)
-  //     console.log('User data:', userData)
-  //     
-  //     // Only redirect if we have a confirmed role
-  //     if (userRole === 'ADMIN') {
-  //       console.log('Redirecting admin to dashboard')
-  //       router.push('/dashboard')
-  //     } else if (userRole === 'VENDOR') {
-  //       console.log('Redirecting vendor to vendor dashboard')
-  //       router.push('/vendor-dashboard')
-  //     } else if (userRole === 'CUSTOMER') {
-  //       console.log('Redirecting customer to customer page')
-  //       router.push('/customer')
-  //     }
-  //     // Don't redirect if role is unknown - let user stay on login page
-  //   }
-  // }, [user, userData, authLoading, router])
+  // Redirect based on user role after login
+  useEffect(() => {
+    if (!authLoading && user && userData) {
+      const userRole = getUserRole(userData)
+      
+      // Redirect based on user role
+      if (userRole === 'ADMIN') {
+        router.push('/dashboard')
+      } else if (userRole === 'VENDOR') {
+        router.push('/vendor-dashboard')
+      } else if (userRole === 'CUSTOMER') {
+        router.push('/customer')
+      }
+    }
+  }, [user, userData, authLoading, router])
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      console.log('🔐 Attempting login for:', email)
       const result = await signIn(email, password)
-      console.log('📡 Login result:', result)
-      
       if (result.success) {
-        console.log('✅ Login successful, waiting for userData to load...')
-        
-        // Wait for userData to be available, then redirect
-        const checkUserData = () => {
-          console.log('🔍 Checking userData:', { userData: !!userData, userDataContent: userData })
-          
-          if (userData) {
-            const userRole = getUserRole(userData)
-            console.log('🎯 UserData loaded, role:', userRole)
-            console.log('📊 Full userData:', userData)
-            
-            if (userRole === 'ADMIN') {
-              console.log('🚀 Redirecting admin to dashboard')
-              router.push('/dashboard')
-            } else if (userRole === 'VENDOR') {
-              console.log('🚀 Redirecting vendor to vendor dashboard')
-              router.push('/vendor-dashboard')
-            } else if (userRole === 'CUSTOMER') {
-              console.log('🚀 Redirecting customer to customer page')
-              router.push('/customer')
-            } else {
-              console.log('❓ Unknown role, staying on login page')
-            }
-          } else {
-            console.log('⏳ UserData not loaded yet, retrying...')
-            setTimeout(checkUserData, 500)
-          }
-        }
-        
-        // Start checking for userData
-        setTimeout(checkUserData, 1000)
+        // Redirection is handled by useEffect
       } else {
-        console.error('❌ Login failed:', result.error)
+        console.error('Login failed:', result.error)
       }
     } catch (error) {
-      console.error('❌ Login error:', error)
+      console.error('Login error:', error)
     } finally {
       setLoading(false)
     }

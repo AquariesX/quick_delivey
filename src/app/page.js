@@ -24,40 +24,24 @@ function HomeContent() {
     }
 
     if (!loading) {
-      console.log('🏠 Home page - Auth state:', { 
-        user: !!user, 
-        emailVerified: user?.emailVerified, 
-        userData: !!userData,
-        userDataRole: userData?.role,
-        loading 
-      })
-      
       if (user && user.emailVerified) {
         // Check user role and redirect accordingly
         if (userData) {
           const userRole = getUserRole(userData)
-          console.log('🎯 Home page - User role detected:', userRole)
-          console.log('📊 Home page - Full userData:', userData)
           
           if (userRole === 'ADMIN') {
-            console.log('🚀 Redirecting admin to dashboard')
             router.push('/dashboard')
           } else if (userRole === 'VENDOR') {
-            console.log('🚀 Redirecting vendor to vendor dashboard')
             router.push('/vendor-dashboard')
           } else if (userRole === 'CUSTOMER') {
-            console.log('🚀 Redirecting customer to customer dashboard')
             router.push('/customer')
           } else {
-            console.log('❓ Unknown role, redirecting to login')
             router.push('/login')
           }
         } else {
-          console.log('⏳ UserData not loaded yet, waiting...')
           // Don't redirect immediately, wait for userData to load
         }
       } else {
-        console.log('🔐 No user or not verified, redirecting to login')
         router.push('/login')
       }
     }
