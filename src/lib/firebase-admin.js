@@ -21,7 +21,7 @@ let firebaseAdminConfig = {
 // Check if service account key is available
 let serviceAccount = null
 
-// First try to load from environment variable
+// First try to load from environment variable (for production)
 if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
@@ -31,7 +31,7 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   }
 }
 
-// If environment variable failed, try to load from file
+// If environment variable failed, try to load from file (for development)
 if (!serviceAccount) {
   try {
     const serviceAccountPath = path.join(process.cwd(), 'firebase-service-account.json')
@@ -53,6 +53,7 @@ if (serviceAccount) {
   }
 } else {
   console.log('No Firebase service account key found, using default credentials')
+  // For production without service account, we'll rely on the REST API approach
 }
 
 // Initialize Firebase Admin SDK
