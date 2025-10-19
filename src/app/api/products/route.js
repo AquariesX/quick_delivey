@@ -68,9 +68,18 @@ export async function GET(request) {
         orderBy: { createdAt: 'desc' }
       })
 
+      // Parse JSON fields back to arrays/objects
+      const processedProducts = products.map(product => ({
+        ...product,
+        proImages: product.proImages ? JSON.parse(product.proImages) : null,
+        keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
+        variations: product.variations ? JSON.parse(product.variations) : null,
+        reviews: product.reviews ? JSON.parse(product.reviews) : null
+      }))
+
       return Response.json({
         success: true,
-        data: products
+        data: processedProducts
       })
     }
 
@@ -154,7 +163,7 @@ export async function POST(request) {
           barcode: data.barcode,
           qnty: parseInt(data.qnty),
           stock: parseInt(data.stock),
-          proImages: data.proImages || null,
+          proImages: data.proImages ? JSON.stringify(data.proImages) : null,
           vendorId: data.vendorId,
           status: (data.status === undefined ? true : !!data.status),
           approvalStatus: 'Pending',
@@ -162,9 +171,9 @@ export async function POST(request) {
           // New Product Fields
           brandName: data.brandName || null,
           manufacturer: data.manufacturer || null,
-          keyFeatures: data.keyFeatures || null,
+          keyFeatures: data.keyFeatures ? JSON.stringify(data.keyFeatures) : null,
           productType: data.productType || null,
-          variations: data.variations || null,
+          variations: data.variations ? JSON.stringify(data.variations) : null,
           sizeName: data.sizeName || null,
           modelNumber: data.modelNumber || null,
           productDimensions: data.productDimensions || null,
@@ -176,7 +185,7 @@ export async function POST(request) {
           conditionType: data.conditionType || null,
           warranty: data.warranty || null,
           ingredients: data.ingredients || null,
-          reviews: data.reviews || null,
+          reviews: data.reviews ? JSON.stringify(data.reviews) : null,
           size: data.size || null,
           color: data.color || null
         }
@@ -261,6 +270,7 @@ export async function PUT(request) {
           barcode: data.barcode,
           qnty: parseInt(data.qnty),
           stock: parseInt(data.stock),
+          proImages: data.proImages ? JSON.stringify(data.proImages) : null,
           vendorId: data.vendorId,
           status: !!data.status
         }
