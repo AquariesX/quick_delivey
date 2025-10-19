@@ -26,18 +26,40 @@ export default function AuthProvider({ children }) {
     if (!user) return
 
     try {
+      console.log('🔍 Loading user data for UID:', user.uid)
       const response = await fetch(`/api/users?uid=${user.uid}`)
       const result = await response.json()
       
+      console.log('📡 User data API response:', result)
+      
       if (result.success) {
+        console.log('✅ User data loaded successfully:', result.user)
         setUserData(result.user)
         setUserDataLoadingTimeout(false)
       } else {
-        console.warn('Failed to load user data:', result.error)
-        setUserDataLoadingTimeout(true)
+        console.warn('⚠️ Failed to load user data:', result.error)
+        
+        // If user not found in database, create default user data
+        if (result.error === 'User not found') {
+          console.log('🔄 User not found in database, creating default user data')
+          const defaultUserData = {
+            uid: user.uid,
+            email: user.email,
+            username: user.displayName || user.email?.split('@')[0] || 'User',
+            role: 'CUSTOMER', // Default role
+            emailVerification: user.emailVerified || false,
+            phoneNumber: user.phoneNumber || '',
+            type: 'user'
+          }
+          console.log('📝 Created default user data:', defaultUserData)
+          setUserData(defaultUserData)
+          setUserDataLoadingTimeout(false)
+        } else {
+          setUserDataLoadingTimeout(true)
+        }
       }
     } catch (error) {
-      console.error('Error loading user data:', error)
+      console.error('❌ Error loading user data:', error)
       setUserDataLoadingTimeout(true)
     }
   }, [user])

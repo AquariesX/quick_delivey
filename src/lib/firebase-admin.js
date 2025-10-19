@@ -7,9 +7,9 @@ import path from 'path'
 if (typeof window === 'undefined') {
   // Only load dotenv on server side
   try {
-    require('dotenv').config()
+    require('dotenv').config({ silent: true })
   } catch (error) {
-    console.log('dotenv not available, using system environment variables')
+    // Silently ignore dotenv errors
   }
 }
 
@@ -25,9 +25,9 @@ let serviceAccount = null
 if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
   try {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-    console.log('Firebase Admin SDK initialized with service account key from environment')
+    // Firebase Admin SDK initialized with service account key from environment
   } catch (error) {
-    console.error('Error parsing Firebase service account key from environment:', error.message)
+    console.warn('Firebase service account key parsing failed, using default credentials')
   }
 }
 
@@ -38,7 +38,7 @@ if (!serviceAccount) {
     if (fs.existsSync(serviceAccountPath)) {
       const serviceAccountData = fs.readFileSync(serviceAccountPath, 'utf8')
       serviceAccount = JSON.parse(serviceAccountData)
-      console.log('Firebase Admin SDK initialized with service account key from file')
+      // Firebase Admin SDK initialized with service account key from file
     }
   } catch (error) {
     console.error('Error loading Firebase service account key from file:', error.message)
@@ -52,7 +52,7 @@ if (serviceAccount) {
     credential: cert(serviceAccount)
   }
 } else {
-  console.log('No Firebase service account key found, using default credentials')
+  // Silently use default credentials without logging
   // For production without service account, we'll rely on the REST API approach
 }
 

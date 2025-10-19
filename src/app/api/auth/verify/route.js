@@ -12,9 +12,7 @@ export async function POST(request) {
       }, { status: 400 })
     }
 
-    console.log('Processing Firebase email verification with code:', oobCode.substring(0, 10) + '...')
-    console.log('Environment:', process.env.NODE_ENV)
-    console.log('Project ID:', process.env.FIREBASE_PROJECT_ID)
+    // Processing Firebase email verification
 
     // Use Firebase REST API to verify the email verification code
     let firebaseUser
@@ -22,7 +20,7 @@ export async function POST(request) {
       const projectId = process.env.FIREBASE_PROJECT_ID || "quick-delivery-fe107"
       const apiKey = process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Zwg3QRf2qmsv56WHdqI5MbnX6owH1ZY"
       
-      console.log('Using API Key:', apiKey.substring(0, 10) + '...')
+      // Using Firebase API Key
       
       const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:verifyEmailVerificationCode?key=${apiKey}`, {
         method: 'POST',
@@ -35,8 +33,7 @@ export async function POST(request) {
       })
 
       const result = await response.json()
-      console.log('Firebase API Response Status:', response.status)
-      console.log('Firebase API Response:', result)
+      // Firebase API Response received
       
       if (!response.ok) {
         console.error('Firebase API Error:', result)

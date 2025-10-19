@@ -13,7 +13,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   
-  const { signIn, user, userData, loading: authLoading } = useAuth()
+  const { signIn, user, userData, loading: authLoading, logout } = useAuth()
   const router = useRouter()
 
   // DISABLED: Automatic redirection - only redirect after manual login
@@ -45,31 +45,36 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
+      console.log('🔐 Attempting login for:', email)
       const result = await signIn(email, password)
+      console.log('📡 Login result:', result)
+      
       if (result.success) {
-        console.log('Login successful, waiting for userData to load...')
+        console.log('✅ Login successful, waiting for userData to load...')
         
         // Wait for userData to be available, then redirect
         const checkUserData = () => {
+          console.log('🔍 Checking userData:', { userData: !!userData, userDataContent: userData })
+          
           if (userData) {
             const userRole = getUserRole(userData)
-            console.log('UserData loaded, role:', userRole)
-            console.log('Full userData:', userData)
+            console.log('🎯 UserData loaded, role:', userRole)
+            console.log('📊 Full userData:', userData)
             
             if (userRole === 'ADMIN') {
-              console.log('Redirecting admin to dashboard')
+              console.log('🚀 Redirecting admin to dashboard')
               router.push('/dashboard')
             } else if (userRole === 'VENDOR') {
-              console.log('Redirecting vendor to vendor dashboard')
+              console.log('🚀 Redirecting vendor to vendor dashboard')
               router.push('/vendor-dashboard')
             } else if (userRole === 'CUSTOMER') {
-              console.log('Redirecting customer to customer page')
+              console.log('🚀 Redirecting customer to customer page')
               router.push('/customer')
             } else {
-              console.log('Unknown role, staying on login page')
+              console.log('❓ Unknown role, staying on login page')
             }
           } else {
-            console.log('UserData not loaded yet, retrying...')
+            console.log('⏳ UserData not loaded yet, retrying...')
             setTimeout(checkUserData, 500)
           }
         }
@@ -77,10 +82,10 @@ export default function LoginPage() {
         // Start checking for userData
         setTimeout(checkUserData, 1000)
       } else {
-        console.error('Login failed:', result.error)
+        console.error('❌ Login failed:', result.error)
       }
     } catch (error) {
-      console.error('Login error:', error)
+      console.error('❌ Login error:', error)
     } finally {
       setLoading(false)
     }
@@ -101,6 +106,20 @@ export default function LoginPage() {
             </div>
             <h1 className="text-3xl font-bold text-gray-800 mb-2">Welcome Back</h1>
             <p className="text-gray-600">Sign in to your Quick Delivery account</p>
+            
+            {/* Logout Button for Testing */}
+            {user && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600 mb-2">Already logged in as: {user.email}</p>
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="text-sm text-red-600 hover:text-red-800 underline"
+                >
+                  Logout to test login flow
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Login Form */}

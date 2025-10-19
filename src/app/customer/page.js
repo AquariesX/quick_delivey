@@ -43,6 +43,7 @@ const CustomerDashboard = () => {
       if (!access.hasAccess) {
         // Redirect based on user role
         const userRole = getUserRole(userData)
+        
         if (userRole === 'ADMIN') {
           router.push('/dashboard')
         } else if (userRole === 'VENDOR') {

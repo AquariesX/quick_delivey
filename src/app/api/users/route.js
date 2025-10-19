@@ -16,14 +16,17 @@ export async function GET(request) {
       if (!user) {
         return Response.json({ 
           success: false, 
-          error: 'User not found' 
+          error: 'User not found'
         }, { status: 404 })
       }
       
       return Response.json({ success: true, user })
     } catch (error) {
       console.error('Database error:', error)
-      return Response.json({ error: 'Database error' }, { status: 500 })
+      return Response.json({ 
+        success: false,
+        error: 'Database error'
+      }, { status: 500 })
     }
   } else if (email) {
     // Get user by email (for verification check)
