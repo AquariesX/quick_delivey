@@ -20,7 +20,7 @@ export async function POST(request) {
     let firebaseUser
     try {
       const projectId = process.env.FIREBASE_PROJECT_ID || "quick-delivery-fe107"
-      const apiKey = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Zwg3QRf2qmsv56WHdqI5MbnX6owH1ZY"
+      const apiKey = process.env.FIREBASE_API_KEY || process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyA6Zwg3QRf2qmsv56WHdqI5MbnX6owH1ZY"
       
       console.log('Using API Key:', apiKey.substring(0, 10) + '...')
       
@@ -40,7 +40,9 @@ export async function POST(request) {
       
       if (!response.ok) {
         console.error('Firebase API Error:', result)
-        throw new Error(result.error?.message || 'Verification failed')
+        console.error('Request URL:', `https://identitytoolkit.googleapis.com/v1/accounts:verifyEmailVerificationCode?key=${apiKey.substring(0, 10)}...`)
+        console.error('Request Body:', JSON.stringify({ oobCode: oobCode.substring(0, 10) + '...' }))
+        throw new Error(result.error?.message || `HTTP ${response.status}: Verification failed`)
       }
 
       firebaseUser = {
