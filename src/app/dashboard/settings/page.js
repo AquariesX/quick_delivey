@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkUserVerification } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import { motion } from 'framer-motion'
 import { User, Bell, Shield, Globe, Save, Eye, EyeOff } from 'lucide-react'
@@ -31,12 +32,18 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (!loading) {
-      if (!user || !user.emailVerified) {
-        router.push('/login')
+      const verification = checkUserVerification(user, userData)
+      
+      if (!verification.isVerified) {
+        if (verification.reason === 'Database verification pending') {
+          router.push('/verify')
+        } else {
+          router.push('/login')
+        }
         return
       }
     }
-  }, [user, loading, router])
+  }, [user, userData, loading, router])
 
   useEffect(() => {
     if (user) {
@@ -83,7 +90,12 @@ export default function SettingsPage() {
     )
   }
 
-  if (!user || !user.emailVerified || !userData) {
+  if (!user || !userData) {
+    return null
+  }
+
+  const verification = checkUserVerification(user, userData)
+  if (!verification.isVerified) {
     return null
   }
 

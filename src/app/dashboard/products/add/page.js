@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContext'
+import { checkUserVerification } from '@/lib/authHelpers'
 import { uploadMultipleImages } from '@/lib/imageUpload'
 import NextImage from 'next/image'
 import DashboardLayout from '@/components/layout/DashboardLayout'
@@ -98,8 +99,15 @@ const AddProductPage = () => {
   // Authentication and access control
   useEffect(() => {
     if (!loading) {
-      if (!user || !user.emailVerified || !userData) {
-        router.push('/login')
+      // Use the same verification logic as other pages
+      const verification = checkUserVerification(user, userData)
+      
+      if (!verification.isVerified) {
+        if (verification.reason === 'Database verification pending') {
+          router.push('/verify')
+        } else {
+          router.push('/login')
+        }
         return
       }
 
@@ -338,7 +346,12 @@ const AddProductPage = () => {
   }
 
   // Access control
-  if (!user || !user.emailVerified || !userData) {
+  if (!user || !userData) {
+    return null
+  }
+
+  const verification = checkUserVerification(user, userData)
+  if (!verification.isVerified) {
     return null
   }
 
