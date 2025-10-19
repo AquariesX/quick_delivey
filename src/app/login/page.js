@@ -22,7 +22,13 @@ export default function LoginPage() {
     try {
       const result = await signIn(email, password)
       if (result.success) {
-        router.push('/dashboard')
+        // Check user role and redirect accordingly
+        const userRole = result.userData?.role || 'CUSTOMER'
+        if (userRole === 'CUSTOMER') {
+          router.push('/customer')
+        } else {
+          router.push('/dashboard')
+        }
       }
     } catch (error) {
       console.error('Login error:', error)

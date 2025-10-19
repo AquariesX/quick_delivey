@@ -271,7 +271,7 @@ export async function PUT(request) {
           qnty: parseInt(data.qnty),
           stock: parseInt(data.stock),
           proImages: data.proImages ? JSON.stringify(data.proImages) : null,
-          vendorId: data.vendorId,
+            vendorId: data.vendorId,
           status: !!data.status
         }
       })

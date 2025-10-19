@@ -24,7 +24,10 @@ function HomeContent() {
 
     if (!loading) {
       if (user && user.emailVerified) {
-        router.push('/dashboard')
+        // Check user role and redirect accordingly
+        // For now, we'll redirect to customer dashboard by default
+        // In a real app, you'd check the user's role from the database
+        router.push('/customer')
       } else {
         router.push('/login')
       }
