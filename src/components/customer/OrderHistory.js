@@ -360,7 +360,7 @@ const OrderHistory = () => {
         <div className="text-center py-12">
           <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-gray-600 mb-2">No orders found</h3>
-          <p className="text-gray-500">You haven't placed any orders yet</p>
+          <p className="text-gray-500">You haven&apos;t placed any orders yet</p>
         </div>
       ) : (
         <div className="space-y-6">

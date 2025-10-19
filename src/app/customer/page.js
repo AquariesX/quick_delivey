@@ -115,7 +115,7 @@ const CustomerDashboard = () => {
               <div className="text-center py-8">
                 <Heart className="w-16 h-16 text-red-500 mx-auto mb-4" />
                 <h2 className="text-3xl font-bold text-gray-800 mb-2">My Favorites</h2>
-                <p className="text-gray-600">Products you've saved for later</p>
+                <p className="text-gray-600">Products you&apos;ve saved for later</p>
               </div>
               {favorites.length === 0 ? (
                 <div className="text-center py-12">

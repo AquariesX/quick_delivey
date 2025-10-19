@@ -36,9 +36,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
 
   // Refetch products when filters change
   useEffect(() => {
-    if (!loading) {
-      fetchProducts()
-    }
+    fetchProducts()
   }, [searchQuery, selectedCategory, selectedVendor, priceRange, sortBy])
 
   const fetchProducts = async () => {

@@ -39,7 +39,7 @@ import {
   Close,
   Logout,
   Store,
-  Package,
+  Inventory,
   ShoppingBag
 } from '@mui/icons-material'
 import MaterialProductCatalog from '@/components/customer/MaterialProductCatalog'
@@ -99,7 +99,7 @@ const MaterialCustomerDashboard = () => {
   }
 
   const tabs = [
-    { id: 'products', label: 'Products', icon: Package },
+    { id: 'products', label: 'Products', icon: Inventory },
     { id: 'orders', label: 'My Orders', icon: ShoppingBag },
     { id: 'favorites', label: 'Favorites', icon: Favorite },
     { id: 'profile', label: 'Profile', icon: Person }
@@ -134,7 +134,7 @@ const MaterialCustomerDashboard = () => {
                 My Favorites
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                Products you've saved for later
+                Products you&apos;ve saved for later
               </Typography>
             </Box>
             {favorites.length === 0 ? (
