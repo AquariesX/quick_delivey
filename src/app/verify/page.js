@@ -22,6 +22,8 @@ function EmailVerificationContent() {
       setLoading(true)
       setStep('verifying')
       
+      console.log('Starting email verification with oobCode:', oobCode ? oobCode.substring(0, 10) + '...' : 'No code')
+      
       const response = await fetch('/api/auth/verify', {
         method: 'POST',
         headers: {
@@ -31,6 +33,7 @@ function EmailVerificationContent() {
       })
 
       const result = await response.json()
+      console.log('Verification response:', result)
       
       if (result.success) {
         setStep('success')
@@ -44,6 +47,7 @@ function EmailVerificationContent() {
       } else {
         setStep('error')
         setMessage(result.error || 'Verification failed')
+        console.error('Verification failed:', result.error)
       }
     } catch (error) {
       console.error('Verification error:', error)
@@ -55,11 +59,19 @@ function EmailVerificationContent() {
   }, [oobCode])
 
   useEffect(() => {
+    console.log('Verification page loaded with params:', { mode, oobCode: oobCode ? oobCode.substring(0, 10) + '...' : 'No code' })
+    
     if (mode === 'verifyEmail' && oobCode) {
       verifyEmail()
     } else {
       setStep('error')
-      setMessage('Invalid verification link. Missing required parameters.')
+      if (!mode) {
+        setMessage('Invalid verification link. Missing mode parameter.')
+      } else if (!oobCode) {
+        setMessage('Invalid verification link. Missing verification code.')
+      } else {
+        setMessage('Invalid verification link. Missing required parameters.')
+      }
     }
   }, [oobCode, mode, verifyEmail])
 
