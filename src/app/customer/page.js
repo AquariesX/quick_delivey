@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
 import OrderHistory from '@/components/customer/OrderHistory'
 import CustomerProfile from '@/components/customer/CustomerProfile'
@@ -26,7 +27,7 @@ import {
 } from 'lucide-react'
 
 const CustomerDashboard = () => {
-  const { user, userData, signOut } = useAuth()
+  const { user, userData, logout } = useAuth()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
@@ -36,16 +37,30 @@ const CustomerDashboard = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
-      router.push('/login')
-    } else {
+    if (!loading && user) {
+      const access = checkUserAccess(user, userData, ['CUSTOMER'])
+      
+      if (!access.hasAccess) {
+        // Redirect based on user role
+        const userRole = getUserRole(userData)
+        if (userRole === 'ADMIN') {
+          router.push('/dashboard')
+        } else if (userRole === 'VENDOR') {
+          router.push('/vendor-dashboard')
+        } else {
+          router.push(access.redirectTo)
+        }
+        return
+      }
+      
+      // Customer - stay on customer page
       setLoading(false)
     }
-  }, [user, router])
+  }, [user, userData, loading, router])
 
   const handleSignOut = async () => {
     try {
-      await signOut()
+      await logout()
       router.push('/login')
     } catch (error) {
       console.error('Sign out error:', error)

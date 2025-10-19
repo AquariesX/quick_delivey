@@ -205,7 +205,14 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
         )
         console.log('Filtered active products:', activeProducts.length)
         console.log('Active products data:', activeProducts)
-        setProducts(activeProducts)
+        
+        if (activeProducts.length > 0) {
+          setProducts(activeProducts)
+        } else {
+          console.log('No products passed filtering, using dummy products for demonstration')
+          const dummyProducts = generateDummyProducts()
+          setProducts(dummyProducts)
+        }
       } else {
         console.log('No real products found, using dummy products for demonstration')
         const dummyProducts = generateDummyProducts()

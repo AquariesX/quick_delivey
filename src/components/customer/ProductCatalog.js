@@ -198,13 +198,6 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
       setLoading(true)
       console.log('Fetching products from original API...')
       
-      // TEMPORARY: Force dummy products for testing
-      console.log('Using dummy products for testing')
-      const dummyProducts = generateDummyProducts()
-      setProducts(dummyProducts)
-      setLoading(false)
-      return
-      
       // Use the original products API that we know works
       const response = await fetch('/api/products?type=products')
       const data = await response.json()
@@ -219,7 +212,14 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
         )
         console.log('Filtered active products:', activeProducts.length)
         console.log('Active products data:', activeProducts)
-        setProducts(activeProducts)
+        
+        if (activeProducts.length > 0) {
+          setProducts(activeProducts)
+        } else {
+          console.log('No products passed filtering, using dummy products for demonstration')
+          const dummyProducts = generateDummyProducts()
+          setProducts(dummyProducts)
+        }
       } else {
         console.log('No real products found, using dummy products for demonstration')
         const dummyProducts = generateDummyProducts()
@@ -238,21 +238,6 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
   const fetchCategories = async () => {
     try {
       console.log('Fetching categories from original API...')
-      
-      // TEMPORARY: Force dummy categories for testing
-      console.log('Using dummy categories for testing')
-      const dummyCategories = [
-        { id: 'electronics', name: 'Electronics', description: 'Electronic devices and gadgets' },
-        { id: 'wearables', name: 'Wearables', description: 'Smart watches and fitness trackers' },
-        { id: 'kitchen', name: 'Kitchen', description: 'Kitchen appliances and tools' },
-        { id: 'gaming', name: 'Gaming', description: 'Gaming accessories and equipment' },
-        { id: 'audio', name: 'Audio', description: 'Audio devices and speakers' },
-        { id: 'accessories', name: 'Accessories', description: 'Tech accessories and peripherals' },
-        { id: 'furniture', name: 'Furniture', description: 'Office and home furniture' },
-        { id: 'security', name: 'Security', description: 'Home security and surveillance' }
-      ]
-      setCategories(dummyCategories)
-      return
       
       const response = await fetch('/api/products?type=categories')
       const data = await response.json()
