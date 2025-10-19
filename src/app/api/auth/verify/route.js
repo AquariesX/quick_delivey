@@ -91,6 +91,17 @@ export async function POST(request) {
 
     console.log('Found user in database:', user.username, 'ID:', user.id)
 
+    // Update Firebase user's email verification status
+    try {
+      await adminAuth.updateUser(firebaseUser.uid, {
+        emailVerified: true
+      })
+      console.log('Firebase email verification status updated for user:', firebaseUser.uid)
+    } catch (firebaseError) {
+      console.warn('Failed to update Firebase email verification status:', firebaseError.message)
+      // Continue with database update even if Firebase update fails
+    }
+
     // Update user with Firebase UID and verification status
     const updatedUser = await prisma.users.update({
       where: { id: user.id },

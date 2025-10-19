@@ -116,11 +116,25 @@ export default function AuthProvider({ children }) {
     try {
       setLoading(true)
       
-              const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password)
+      const { user: firebaseUser } = await signInWithEmailAndPassword(auth, email, password)
       
-      // Check if email is verified
+      // Check if email is verified in Firebase
       if (!firebaseUser.emailVerified) {
-              await signOut(auth)
+        // Fallback: Check database verification status
+        try {
+          const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+          const result = await response.json()
+          
+          if (result.success && result.user?.emailVerification) {
+            console.log('Email verified in database, allowing login')
+            toast.success('Welcome back!')
+            return { success: true, user: firebaseUser }
+          }
+        } catch (dbError) {
+          console.warn('Failed to check database verification status:', dbError.message)
+        }
+        
+        await signOut(auth)
         toast.error('Please verify your email before signing in.')
         return { success: false, error: 'Email not verified' }
       }
@@ -129,7 +143,7 @@ export default function AuthProvider({ children }) {
       return { success: true, user: firebaseUser }
     } catch (error) {
       console.error('Sign in error:', error)
-        toast.error(getErrorMessage(error.code))
+      toast.error(getErrorMessage(error.code))
       return { success: false, error: error.message }
     } finally {
       setLoading(false)

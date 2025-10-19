@@ -4,12 +4,32 @@ import { prisma } from '@/lib/prisma'
 export async function GET(request) {
   const { searchParams } = new URL(request.url)
   const uid = searchParams.get('uid')
+  const email = searchParams.get('email')
   
   if (uid) {
     // Get user by UID (for client-side loading)
     try {
       const user = await prisma.users.findUnique({
         where: { uid }
+      })
+      
+      if (!user) {
+        return Response.json({ 
+          success: false, 
+          error: 'User not found' 
+        }, { status: 404 })
+      }
+      
+      return Response.json({ success: true, user })
+    } catch (error) {
+      console.error('Database error:', error)
+      return Response.json({ error: 'Database error' }, { status: 500 })
+    }
+  } else if (email) {
+    // Get user by email (for verification check)
+    try {
+      const user = await prisma.users.findFirst({
+        where: { email: email.toLowerCase().trim() }
       })
       
       if (!user) {
