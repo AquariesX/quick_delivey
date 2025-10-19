@@ -46,16 +46,21 @@ export function checkUserAccess(user, userData, allowedRoles) {
     return { hasAccess: false, redirectTo: '/login', reason: 'No user' }
   }
   
-  if (!user.emailVerified) {
-    return { hasAccess: false, redirectTo: '/verify', reason: 'Email not verified' }
+  // Check verification status using the same logic as checkUserVerification
+  const verification = checkUserVerification(user, userData)
+  
+  if (!verification.isVerified) {
+    if (verification.reason === 'Database verification pending') {
+      return { hasAccess: false, redirectTo: '/verify', reason: 'Database verification pending' }
+    } else if (verification.reason === 'Loading user data') {
+      return { hasAccess: false, redirectTo: '/login', reason: 'Loading user data' }
+    } else {
+      return { hasAccess: false, redirectTo: '/login', reason: 'Email not verified' }
+    }
   }
   
   if (!userData) {
     return { hasAccess: false, redirectTo: '/login', reason: 'No user data' }
-  }
-  
-  if (!userData.emailVerification) {
-    return { hasAccess: false, redirectTo: '/verify', reason: 'Database verification pending' }
   }
   
   if (!allowedRoles.includes(userData.role)) {
