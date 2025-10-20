@@ -272,12 +272,12 @@ const Sidebar = () => {
       initial={{ x: -300 }}
       animate={{ x: 0 }}
       transition={{ duration: 0.3 }}
-      className={`bg-white border-r border-gray-200 h-full flex flex-col ${
+      className={`bg-white/90 backdrop-blur-lg border-r border-gray-200/50 h-full flex flex-col ${
         isCollapsed ? 'w-16' : 'w-64'
-      } transition-all duration-300`}
+      } transition-all duration-300 shadow-lg`}
     >
       {/* Header */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-gray-200/50">
         <div className="flex items-center justify-between">
           {!isCollapsed && (
             <motion.div
@@ -286,10 +286,16 @@ const Sidebar = () => {
               transition={{ delay: 0.1 }}
               className="flex items-center space-x-3"
             >
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
+              <motion.div 
+                className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center"
+                whileHover={{ rotate: 360 }}
+                transition={{ duration: 0.5 }}
+              >
                 <span className="text-white font-bold text-sm">QD</span>
-              </div>
-              <h1 className="text-lg font-bold text-gray-800">Quick Delivery</h1>
+              </motion.div>
+              <h1 className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Quick Delivery
+              </h1>
             </motion.div>
           )}
           
@@ -310,17 +316,25 @@ const Sidebar = () => {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="p-4 border-b border-gray-200"
+          className="p-4 border-b border-gray-200/50"
         >
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center">
+            <motion.div 
+              className="w-10 h-10 bg-gradient-to-r from-green-500 to-blue-600 rounded-full flex items-center justify-center"
+              whileHover={{ scale: 1.1 }}
+              transition={{ duration: 0.2 }}
+            >
               <span className="text-white font-semibold text-sm">
-                {user?.displayName?.charAt(0) || 'U'}
+                {user?.displayName?.charAt(0) || userData?.username?.charAt(0) || 'U'}
               </span>
-            </div>
+            </motion.div>
             <div>
-              <p className="font-semibold text-gray-800">{user?.displayName || 'User'}</p>
-                    <p className="text-xs text-gray-500 capitalize">{userData?.role?.toLowerCase() || 'customer'}</p>
+              <p className="font-semibold text-gray-800">
+                {userData?.username || user?.displayName || 'User'}
+              </p>
+              <p className="text-xs text-gray-500 capitalize">
+                {userData?.role?.toLowerCase() || 'customer'}
+              </p>
             </div>
           </div>
         </motion.div>
@@ -328,13 +342,20 @@ const Sidebar = () => {
 
       {/* Menu Items */}
       <div className="flex-1 p-4 space-y-2 overflow-y-auto">
-        {menuItems.map((item) => (
-          <MenuItem key={item.id} item={item} />
+        {menuItems.map((item, index) => (
+          <motion.div
+            key={item.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.3 + index * 0.05 }}
+          >
+            <MenuItem item={item} />
+          </motion.div>
         ))}
       </div>
 
       {/* Logout */}
-      <div className="p-4 border-t border-gray-200">
+      <div className="p-4 border-t border-gray-200/50">
         <motion.button
           whileHover={{ x: 4 }}
           whileTap={{ scale: 0.98 }}

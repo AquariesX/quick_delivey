@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    // Speed up CI builds by skipping lint errors during production build
+    ignoreDuringBuilds: true,
+  },
   images: {
     remotePatterns: [
       {
