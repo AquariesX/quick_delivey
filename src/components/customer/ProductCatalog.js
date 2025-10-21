@@ -20,12 +20,14 @@ import {
 const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites }) => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('grid')
   const [sortBy, setSortBy] = useState('newest')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [selectedVendor, setSelectedVendor] = useState('')
-  const [priceRange, setPriceRange] = useState({ min: 0, max: 1000 })
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 100000 })
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
@@ -37,9 +39,34 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
   // Refetch products when filters change
   useEffect(() => {
     fetchProducts()
-  }, [searchQuery, selectedCategory, selectedVendor, priceRange, sortBy])
+  }, [searchQuery, selectedCategory, selectedSubcategory, selectedVendor, sortBy])
 
-  // Generate dummy products for demonstration
+  // Fetch subcategories when a category is selected
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        if (!selectedCategory) {
+          setSubcategories([])
+          setSelectedSubcategory('')
+          return
+        }
+        const response = await fetch(`/api/products?type=subcategories&categoryId=${selectedCategory}`)
+        const data = await response.json()
+        if (data.success && Array.isArray(data.data)) {
+          setSubcategories(data.data)
+          setSelectedSubcategory('')
+        } else {
+          setSubcategories([])
+        }
+      } catch (err) {
+        console.error('Error fetching subcategories:', err)
+        setSubcategories([])
+      }
+    }
+    fetchSubcategories()
+  }, [selectedCategory])
+
+  // Generate dummy products for demonstration (kept for potential dev usage, not used by default)
   const generateDummyProducts = () => {
     const dummyProducts = [
       {
@@ -196,40 +223,44 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      console.log('Fetching products from original API...')
-      
-      // Use the original products API that we know works
+      console.log('Fetching products from database...')
+
       const response = await fetch('/api/products?type=products')
       const data = await response.json()
       
       console.log('API Response:', data)
       
-      if (data.success && data.data && data.data.length > 0) {
-        console.log('Raw API data:', data.data)
-        // More lenient filtering - just check if product exists and has basic info
+      if (data.success && data.data) {
+        console.log('Products found:', data.data.length)
+        console.log('Raw products data:', data.data)
+        // Filter for active and approved products only
         const activeProducts = data.data.filter(product => 
-          product && product.proName && product.price
+          product && 
+          product.proName && 
+          product.price && 
+          product.status === true && 
+          product.approvalStatus === 'Approved'
         )
-        console.log('Filtered active products:', activeProducts.length)
-        console.log('Active products data:', activeProducts)
+        console.log('Active approved products:', activeProducts.length)
+        console.log('Filtered products:', activeProducts)
         
-        if (activeProducts.length > 0) {
-          setProducts(activeProducts)
+        // If no approved products, show all products for debugging
+        if (activeProducts.length === 0) {
+          console.log('No approved products found, showing all products for debugging')
+          const allProducts = data.data.filter(product => 
+            product && product.proName && product.price
+          )
+          setProducts(allProducts)
         } else {
-          console.log('No products passed filtering, using dummy products for demonstration')
-          const dummyProducts = generateDummyProducts()
-          setProducts(dummyProducts)
+          setProducts(activeProducts)
         }
       } else {
-        console.log('No real products found, using dummy products for demonstration')
-        const dummyProducts = generateDummyProducts()
-        setProducts(dummyProducts)
+        console.log('No products found in API response')
+        setProducts([])
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      console.log('Using dummy products due to API error')
-      const dummyProducts = generateDummyProducts()
-      setProducts(dummyProducts)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -282,18 +313,30 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
     const matchesSearch = product.proName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.description?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !selectedCategory || product.catId === selectedCategory
+    const matchesSubcategory = !selectedSubcategory || product.subCatId === Number(selectedSubcategory)
     const matchesVendor = !selectedVendor || product.vendorId === selectedVendor
-    const matchesPrice = product.price >= priceRange.min && product.price <= priceRange.max
+    const productPrice = parseFloat(product.price) || 0
+    const matchesPrice = productPrice >= priceRange.min && productPrice <= priceRange.max
     
-    return matchesSearch && matchesCategory && matchesVendor && matchesPrice
+    console.log(`Product: ${product.proName}, catId: ${product.catId}, subCatId: ${product.subCatId}, selectedCategory: ${selectedCategory}, selectedSubcategory: ${selectedSubcategory}`)
+    console.log(`matchesSearch: ${matchesSearch}, matchesCategory: ${matchesCategory}, matchesSubcategory: ${matchesSubcategory}, matchesVendor: ${matchesVendor}, matchesPrice: ${matchesPrice}`)
+    
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice
   })
+  
+  console.log('Total products:', products.length)
+  console.log('Filtered products:', filteredProducts.length)
+  console.log('Selected category:', selectedCategory)
+  console.log('Selected subcategory:', selectedSubcategory)
+  console.log('Price range:', priceRange)
+  console.log('Search query:', searchQuery)
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price
+        return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
       case 'price-high':
-        return b.price - a.price
+        return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0)
       case 'rating':
         return (b.reviews?.length || 0) - (a.reviews?.length || 0)
       case 'newest':
@@ -382,18 +425,18 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
           
           <div className="flex items-center justify-between">
             <div>
-              {product.salePrice && product.salePrice < product.price ? (
+              {product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price) ? (
                 <div>
                   <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                    ${product.salePrice}
+                    ${parseFloat(product.salePrice)}
                   </span>
                   <span className="text-sm text-gray-500 line-through ml-2">
-                    ${product.price}
+                    ${parseFloat(product.price)}
                   </span>
                 </div>
               ) : (
                 <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                  ${product.price}
+                  ${parseFloat(product.price)}
                 </span>
               )}
             </div>
@@ -440,6 +483,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
   console.log('ProductCatalog categories:', categories.length)
   console.log('ProductCatalog products data:', products)
   console.log('ProductCatalog filtered products:', filteredProducts.length)
+  console.log('ProductCatalog sorted products:', sortedProducts.length)
 
   return (
     <div className="space-y-8">
@@ -511,6 +555,59 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
           </button>
         </div>
       </motion.div>
+
+      {/* Category and Subcategory Tabs */}
+      <div className="space-y-4">
+        {/* Categories Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => { setSelectedCategory(''); setSelectedSubcategory('') }}
+            className={`px-4 py-2 rounded-full whitespace-nowrap border transition-colors ${
+              selectedCategory === '' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+            }`}
+          >
+            All
+          </button>
+          {categories.map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`px-4 py-2 rounded-full whitespace-nowrap border transition-colors ${
+                selectedCategory === cat.id ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              }`}
+              title={cat.description || cat.name}
+            >
+              {cat.name}
+            </button>
+          ))}
+        </div>
+
+        {/* Subcategories Tabs (shown when category selected) */}
+        {selectedCategory && (
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            <button
+              onClick={() => setSelectedSubcategory('')}
+              className={`px-3 py-1.5 rounded-full whitespace-nowrap border text-sm transition-colors ${
+                selectedSubcategory === '' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              All Subcategories
+            </button>
+            {subcategories.map((sub) => (
+              <button
+                key={sub.subCatId}
+                onClick={() => setSelectedSubcategory(String(sub.subCatId))}
+                className={`px-3 py-1.5 rounded-full whitespace-nowrap border text-sm transition-colors ${
+                  selectedSubcategory === String(sub.subCatId) ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                }`}
+                title={sub.subCatName}
+              >
+                {sub.subCatName}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
         {/* Filters Sidebar */}

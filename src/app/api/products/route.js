@@ -69,13 +69,26 @@ export async function GET(request) {
       })
 
       // Parse JSON fields back to arrays/objects
-      const processedProducts = products.map(product => ({
-        ...product,
-        proImages: product.proImages ? JSON.parse(product.proImages) : null,
-        keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
-        variations: product.variations ? JSON.parse(product.variations) : null,
-        reviews: product.reviews ? JSON.parse(product.reviews) : null
-      }))
+      const processedProducts = products.map(product => {
+        try {
+          return {
+            ...product,
+            proImages: product.proImages ? JSON.parse(product.proImages) : null,
+            keyFeatures: product.keyFeatures ? JSON.parse(product.keyFeatures) : null,
+            variations: product.variations ? JSON.parse(product.variations) : null,
+            reviews: product.reviews ? JSON.parse(product.reviews) : null
+          }
+        } catch (parseError) {
+          console.warn('JSON parse error for product:', product.proId, parseError)
+          return {
+            ...product,
+            proImages: null,
+            keyFeatures: null,
+            variations: null,
+            reviews: null
+          }
+        }
+      })
 
       return Response.json({
         success: true,

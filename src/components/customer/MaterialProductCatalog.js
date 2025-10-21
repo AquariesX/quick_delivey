@@ -56,12 +56,14 @@ import LoadingSpinner from '@/components/ui/LoadingSpinner'
 const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites }) => {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
+  const [subcategories, setSubcategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('grid')
   const [sortBy, setSortBy] = useState('newest')
   const [selectedCategory, setSelectedCategory] = useState('')
+  const [selectedSubcategory, setSelectedSubcategory] = useState('')
   const [selectedVendor, setSelectedVendor] = useState('')
-  const [priceRange, setPriceRange] = useState([0, 1000])
+  const [priceRange, setPriceRange] = useState([0, 100000])
   const [showFilters, setShowFilters] = useState(false)
 
   useEffect(() => {
@@ -69,7 +71,7 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
     fetchCategories()
   }, [])
 
-  // Generate dummy products for demonstration
+  // Generate dummy products for demonstration (kept for potential dev usage, not used by default)
   const generateDummyProducts = () => {
     const dummyProducts = [
       {
@@ -189,40 +191,44 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      console.log('Fetching products from original API...')
-      
-      // Use the original products API that we know works
+      console.log('Fetching products from database...')
+
       const response = await fetch('/api/products?type=products')
       const data = await response.json()
       
       console.log('API Response:', data)
       
-      if (data.success && data.data && data.data.length > 0) {
-        console.log('Raw API data:', data.data)
-        // More lenient filtering - just check if product exists and has basic info
+      if (data.success && data.data) {
+        console.log('Products found:', data.data.length)
+        console.log('Raw products data:', data.data)
+        // Filter for active and approved products only
         const activeProducts = data.data.filter(product => 
-          product && product.proName && product.price
+          product && 
+          product.proName && 
+          product.price && 
+          product.status === true && 
+          product.approvalStatus === 'Approved'
         )
-        console.log('Filtered active products:', activeProducts.length)
-        console.log('Active products data:', activeProducts)
+        console.log('Active approved products:', activeProducts.length)
+        console.log('Filtered products:', activeProducts)
         
-        if (activeProducts.length > 0) {
-          setProducts(activeProducts)
+        // If no approved products, show all products for debugging
+        if (activeProducts.length === 0) {
+          console.log('No approved products found, showing all products for debugging')
+          const allProducts = data.data.filter(product => 
+            product && product.proName && product.price
+          )
+          setProducts(allProducts)
         } else {
-          console.log('No products passed filtering, using dummy products for demonstration')
-          const dummyProducts = generateDummyProducts()
-          setProducts(dummyProducts)
+          setProducts(activeProducts)
         }
       } else {
-        console.log('No real products found, using dummy products for demonstration')
-        const dummyProducts = generateDummyProducts()
-        setProducts(dummyProducts)
+        console.log('No products found in API response')
+        setProducts([])
       }
     } catch (error) {
       console.error('Error fetching products:', error)
-      console.log('Using dummy products due to API error')
-      const dummyProducts = generateDummyProducts()
-      setProducts(dummyProducts)
+      setProducts([])
     } finally {
       setLoading(false)
     }
@@ -266,22 +272,49 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
     }
   }
 
+  // Fetch subcategories when category changes
+  useEffect(() => {
+    const fetchSubcategories = async () => {
+      try {
+        if (!selectedCategory) {
+          setSubcategories([])
+          setSelectedSubcategory('')
+          return
+        }
+        const response = await fetch(`/api/products?type=subcategories&categoryId=${selectedCategory}`)
+        const data = await response.json()
+        if (data.success && Array.isArray(data.data)) {
+          setSubcategories(data.data)
+          setSelectedSubcategory('')
+        } else {
+          setSubcategories([])
+        }
+      } catch (err) {
+        console.error('Error fetching subcategories:', err)
+        setSubcategories([])
+      }
+    }
+    fetchSubcategories()
+  }, [selectedCategory])
+
   const filteredProducts = products.filter(product => {
     const matchesSearch = product.proName.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           product.description?.toLowerCase().includes(searchQuery.toLowerCase())
     const matchesCategory = !selectedCategory || product.catId === selectedCategory
+    const matchesSubcategory = !selectedSubcategory || product.subCatId === Number(selectedSubcategory)
     const matchesVendor = !selectedVendor || product.vendorId === selectedVendor
-    const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1]
+    const productPrice = parseFloat(product.price) || 0
+    const matchesPrice = productPrice >= priceRange[0] && productPrice <= priceRange[1]
     
-    return matchesSearch && matchesCategory && matchesVendor && matchesPrice
+    return matchesSearch && matchesCategory && matchesSubcategory && matchesVendor && matchesPrice
   })
 
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     switch (sortBy) {
       case 'price-low':
-        return a.price - b.price
+        return (parseFloat(a.price) || 0) - (parseFloat(b.price) || 0)
       case 'price-high':
-        return b.price - a.price
+        return (parseFloat(b.price) || 0) - (parseFloat(a.price) || 0)
       case 'rating':
         return (b.reviews?.length || 0) - (a.reviews?.length || 0)
       case 'newest':
@@ -382,10 +415,10 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
             <Box sx={{ mt: 'auto' }}>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
                 <Typography variant="h6" color="primary" fontWeight="bold">
-                  ${product.salePrice && product.salePrice < product.price ? product.salePrice : product.price}
-                  {product.salePrice && product.salePrice < product.price && (
+                  ${product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price) ? parseFloat(product.salePrice) : parseFloat(product.price)}
+                  {product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price) && (
                     <Typography component="span" variant="body2" color="text.secondary" sx={{ textDecoration: 'line-through', ml: 1 }}>
-                      ${product.price}
+                      ${parseFloat(product.price)}
                     </Typography>
                   )}
                 </Typography>
@@ -422,6 +455,12 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
       </Box>
     )
   }
+
+  console.log('MaterialProductCatalog products:', products.length)
+  console.log('MaterialProductCatalog categories:', categories.length)
+  console.log('MaterialProductCatalog products data:', products)
+  console.log('MaterialProductCatalog filtered products:', filteredProducts.length)
+  console.log('MaterialProductCatalog sorted products:', sortedProducts.length)
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -474,6 +513,55 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
           </Button>
         </Stack>
       </Paper>
+
+      {/* Category and Subcategory Tabs */}
+      <Stack spacing={2} sx={{ mb: 3 }}>
+        {/* Categories */}
+        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
+          <Chip
+            label="All"
+            onClick={() => { setSelectedCategory(''); setSelectedSubcategory('') }}
+            color={selectedCategory === '' ? 'primary' : 'default'}
+            variant={selectedCategory === '' ? 'filled' : 'outlined'}
+            clickable
+          />
+          {categories.map((cat) => (
+            <Chip
+              key={cat.id}
+              label={cat.name}
+              onClick={() => setSelectedCategory(cat.id)}
+              color={selectedCategory === cat.id ? 'primary' : 'default'}
+              variant={selectedCategory === cat.id ? 'filled' : 'outlined'}
+              clickable
+            />
+          ))}
+        </Stack>
+
+        {/* Subcategories */}
+        {selectedCategory && (
+          <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 1 }}>
+            <Chip
+              label="All Subcategories"
+              onClick={() => setSelectedSubcategory('')}
+              color={selectedSubcategory === '' ? 'secondary' : 'default'}
+              variant={selectedSubcategory === '' ? 'filled' : 'outlined'}
+              clickable
+              size="small"
+            />
+            {subcategories.map((sub) => (
+              <Chip
+                key={sub.subCatId}
+                label={sub.subCatName}
+                onClick={() => setSelectedSubcategory(String(sub.subCatId))}
+                color={selectedSubcategory === String(sub.subCatId) ? 'secondary' : 'default'}
+                variant={selectedSubcategory === String(sub.subCatId) ? 'filled' : 'outlined'}
+                clickable
+                size="small"
+              />
+            ))}
+          </Stack>
+        )}
+      </Stack>
 
       <Box sx={{ display: 'flex', gap: 3 }}>
         {/* Filters Sidebar */}
@@ -557,8 +645,8 @@ const MaterialProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, fa
                 onChange={(e, newValue) => setPriceRange(newValue)}
                 valueLabelDisplay="auto"
                 min={0}
-                max={1000}
-                step={10}
+                max={100000}
+                step={1000}
               />
             </Box>
           </Paper>
