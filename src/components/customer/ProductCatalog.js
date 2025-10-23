@@ -14,7 +14,12 @@ import {
   ChevronDown,
   Search,
   SlidersHorizontal,
-  Package
+  Package,
+  Truck,
+  ShoppingBag,
+  Tag,
+  Home,
+  Smartphone
 } from 'lucide-react'
 
 const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites }) => {
@@ -486,7 +491,8 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
   console.log('ProductCatalog sorted products:', sortedProducts.length)
 
   return (
-    <div className="space-y-8">
+    <div className="w-full overflow-x-hidden">
+      <div className="space-y-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
@@ -556,10 +562,51 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
         </div>
       </motion.div>
 
+      {/* Category Cards Section (example-style pastel cards) */}
+      {categories.length > 0 && (
+        <div>
+          <h2 className="text-2xl font-bold text-center mb-4">Categories</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-6 px-2">
+            {categories.map((cat, idx) => {
+              // pastel color palette
+              const palette = ['#FBE9E7', '#E8FCF0', '#E8F2FF', '#FFF0F6', '#F3F4F6']
+              const bg = palette[idx % palette.length]
+              // category icons mapping
+              const categoryIcons = {
+                'Electronics': Smartphone,
+                'Food & Groceries': Truck,
+                'All Products': ShoppingBag,
+                'Home & Kitchen': Home,
+                'Fashion': Tag,
+                'Default': Package
+              }
+              const IconComp = categoryIcons[cat.name] || categoryIcons['Default']
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className="group p-4 flex flex-col items-center justify-start text-center hover:scale-105 transform transition-all duration-300"
+                  title={cat.description || cat.name}
+                >
+                  <div style={{ background: bg }} className="w-full h-44 rounded-xl shadow-md overflow-hidden flex items-center justify-center p-4">
+                    <div className="text-6xl text-gray-800 opacity-90 flex items-center justify-center">
+                      <IconComp className="w-16 h-16" />
+                    </div>
+                  </div>
+                  <div className="mt-3 w-full">
+                    <h3 className="font-semibold text-center">{cat.name}</h3>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Category and Subcategory Tabs */}
       <div className="space-y-4">
         {/* Categories Tabs */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1">
+  <div className="flex items-center gap-2 flex-wrap pb-1">
           <button
             onClick={() => { setSelectedCategory(''); setSelectedSubcategory('') }}
             className={`px-4 py-2 rounded-full whitespace-nowrap border transition-colors ${
@@ -584,7 +631,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
 
         {/* Subcategories Tabs (shown when category selected) */}
         {selectedCategory && (
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex items-center gap-2 flex-wrap pb-1">
             <button
               onClick={() => setSelectedSubcategory('')}
               className={`px-3 py-1.5 rounded-full whitespace-nowrap border text-sm transition-colors ${
@@ -768,7 +815,8 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
         </div>
       </div>
     </div>
+    </div>
   )
-}
+} 
 
 export default ProductCatalog
