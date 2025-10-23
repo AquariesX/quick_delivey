@@ -392,14 +392,14 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
         <div className="p-4">
           <div className="mb-3">
             <motion.span 
-              className="text-xs text-purple-600 bg-gradient-to-r from-purple-100 to-pink-100 px-3 py-1 rounded-full font-medium"
+              className="text-xs text-[#F25D49] bg-gradient-to-r from-orange-100 to-red-100 px-3 py-1 rounded-full font-medium"
               whileHover={{ scale: 1.05 }}
             >
               {product.category?.name}
             </motion.span>
           </div>
           
-          <h3 className="font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-purple-600 transition-colors duration-300 text-lg">
+          <h3 className="font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-[#F25D49] transition-colors duration-300 text-lg">
             {product.proName}
           </h3>
           
@@ -427,7 +427,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
             <div>
               {product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price) ? (
                 <div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  <span className="text-xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
                     ${parseFloat(product.salePrice)}
                   </span>
                   <span className="text-sm text-gray-500 line-through ml-2">
@@ -435,7 +435,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
                   </span>
                 </div>
               ) : (
-                <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                <span className="text-xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
                   ${parseFloat(product.price)}
                 </span>
               )}
@@ -445,7 +445,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
               onClick={() => onAddToCart(product)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+              className="px-6 py-2 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-xl hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
             >
               <ShoppingCart className="w-4 h-4" />
               <span className="font-medium">Add</span>
@@ -454,7 +454,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
           
           <div className="mt-3 flex items-center justify-between">
             <div className="text-xs text-gray-500">
-              Sold by: <span className="font-medium text-purple-600">{product.vendor?.businessName || 'Unknown Vendor'}</span>
+              Sold by: <span className="font-medium text-[#F25D49]">{product.vendor?.businessName || 'Unknown Vendor'}</span>
             </div>
             {product.vendor?.role === 'ADMIN' && (
               <motion.span 
@@ -495,7 +495,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
       >
         <div>
           <motion.h1 
-            className="text-4xl font-bold bg-gradient-to-r from-purple-600 via-pink-600 to-red-500 bg-clip-text text-transparent"
+            className="text-4xl font-bold bg-gradient-to-r from-[#F25D49] via-[#FF6B5B] to-[#FF8E7A] bg-clip-text text-transparent"
             animate={{ 
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
@@ -548,7 +548,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="flex items-center space-x-2 px-4 py-2 bg-[#F25D49] text-white rounded-lg hover:bg-[#F25D49]/90 transition-colors"
           >
             <SlidersHorizontal className="w-4 h-4" />
             <span>Filters</span>
@@ -563,7 +563,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
           <button
             onClick={() => { setSelectedCategory(''); setSelectedSubcategory('') }}
             className={`px-4 py-2 rounded-full whitespace-nowrap border transition-colors ${
-              selectedCategory === '' ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              selectedCategory === '' ? 'bg-[#F25D49] text-white border-[#F25D49]' : 'bg-white text-gray-700 border-gray-200 hover:bg-[#F25D49]/10'
             }`}
           >
             All
@@ -573,7 +573,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
               className={`px-4 py-2 rounded-full whitespace-nowrap border transition-colors ${
-                selectedCategory === cat.id ? 'bg-purple-600 text-white border-purple-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                selectedCategory === cat.id ? 'bg-[#F25D49] text-white border-[#F25D49]' : 'bg-white text-gray-700 border-gray-200 hover:bg-[#F25D49]/10'
               }`}
               title={cat.description || cat.name}
             >
@@ -588,7 +588,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
             <button
               onClick={() => setSelectedSubcategory('')}
               className={`px-3 py-1.5 rounded-full whitespace-nowrap border text-sm transition-colors ${
-                selectedSubcategory === '' ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                selectedSubcategory === '' ? 'bg-[#FF6B5B] text-white border-[#FF6B5B]' : 'bg-white text-gray-700 border-gray-200 hover:bg-[#FF6B5B]/10'
               }`}
             >
               All Subcategories
@@ -598,7 +598,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
                 key={sub.subCatId}
                 onClick={() => setSelectedSubcategory(String(sub.subCatId))}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap border text-sm transition-colors ${
-                  selectedSubcategory === String(sub.subCatId) ? 'bg-pink-600 text-white border-pink-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  selectedSubcategory === String(sub.subCatId) ? 'bg-[#FF6B5B] text-white border-[#FF6B5B]' : 'bg-white text-gray-700 border-gray-200 hover:bg-[#FF6B5B]/10'
                 }`}
                 title={sub.subCatName}
               >
@@ -736,9 +736,9 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
                   scale: [1, 1.1, 1]
                 }}
                 transition={{ duration: 2, repeat: Infinity }}
-                className="w-24 h-24 bg-gradient-to-r from-purple-100 to-pink-100 rounded-full flex items-center justify-center mx-auto mb-6"
+                className="w-24 h-24 bg-gradient-to-r from-orange-100 to-red-100 rounded-full flex items-center justify-center mx-auto mb-6"
               >
-                <Package className="w-12 h-12 text-purple-500" />
+                <Package className="w-12 h-12 text-[#F25D49]" />
               </motion.div>
               <h3 className="text-2xl font-bold text-gray-800 mb-2">No products found</h3>
               <p className="text-gray-500 text-lg">Try adjusting your search or filters</p>
@@ -749,7 +749,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
                 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                className="mt-4 px-6 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300"
+                className="mt-4 px-6 py-2 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-lg hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300"
               >
                 Clear Filters
               </motion.button>

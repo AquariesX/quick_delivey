@@ -23,7 +23,12 @@ import {
   Menu,
   X,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Grid3X3,
+  Layers,
+  UserCircle,
+  Wishlist,
+  Settings
 } from 'lucide-react'
 
 const CustomerDashboard = () => {
@@ -32,8 +37,15 @@ const CustomerDashboard = () => {
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
+  const [showCategoriesSidebar, setShowCategoriesSidebar] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const [cartItems, setCartItems] = useState([])
   const [favorites, setFavorites] = useState([])
+  const [notifications, setNotifications] = useState([
+    { id: 1, message: 'New products available!', time: '2 min ago', read: false },
+    { id: 2, message: 'Your order has been shipped', time: '1 hour ago', read: true },
+    { id: 3, message: 'Flash sale on electronics!', time: '3 hours ago', read: false }
+  ])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -58,6 +70,17 @@ const CustomerDashboard = () => {
       setLoading(false)
     }
   }, [user, userData, router])
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showUserMenu && !event.target.closest('.user-menu-container')) {
+        setShowUserMenu(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showUserMenu])
 
   const handleSignOut = async () => {
     try {
@@ -166,7 +189,7 @@ const CustomerDashboard = () => {
                           </span>
                           <button
                             onClick={() => handleAddToCart(product)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors btn-animated"
+                            className="px-4 py-2 bg-[#F25D49] text-white rounded-lg hover:bg-[#F25D49]/90 transition-colors btn-animated"
                           >
                             Add to Cart
                           </button>
@@ -192,7 +215,7 @@ const CustomerDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -201,10 +224,10 @@ const CustomerDashboard = () => {
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="w-20 h-20 border-4 border-purple-200 border-t-purple-600 rounded-full mx-auto mb-6"
+            className="w-20 h-20 border-4 border-orange-200 border-t-[#F25D49] rounded-full mx-auto mb-6"
           />
           <motion.h2 
-            className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-2"
+            className="text-2xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent mb-2"
             animate={{ 
               backgroundPosition: ['0% 50%', '100% 50%', '0% 50%']
             }}
@@ -219,132 +242,213 @@ const CustomerDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-pink-50 to-red-50">
-        {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
+        {/* Enhanced Header */}
         <motion.header
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white shadow-lg sticky top-0 z-50"
+          className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-100"
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
+          <div className="w-full px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-20">
+              {/* Categories button placed before logo */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowCategoriesSidebar(!showCategoriesSidebar)}
+                className="p-3 text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300 mr-3"
+                title="Categories"
+              >
+                <Grid3X3 className="w-6 h-6" />
+              </motion.button>
+
               {/* Logo */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2"
+                className="flex items-center space-x-3"
               >
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                  <ShoppingBag className="w-5 h-5 text-white" />
+                <div className="w-10 h-10 bg-[#F25D49] rounded-xl flex items-center justify-center shadow-lg">
+                  <ShoppingBag className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-xl font-bold text-gray-800">QuickDelivery</span>
+                <span className="text-2xl font-bold text-[#F55E49]">QuickDelivery</span>
               </motion.div>
 
-              {/* Search Bar */}
-              <div className="flex-1 max-w-lg mx-8 hidden md:block">
+              {/* Search input (inline on lg+, icon only on smaller screens) */}
+              <div className="hidden lg:flex items-center justify-center px-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                   <input
+                    aria-label="Search products"
                     type="text"
-                    placeholder="Search products..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="Search products..."
+                    className="pl-10 pr-8 py-2 w-64 rounded-full border border-gray-200 bg-white text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-[#F25D49] focus:border-transparent transition-colors"
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                      aria-label="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* Navigation Dropdown */}
-              <div className="hidden md:block relative">
-                <div className="relative">
-                  <select
-                    value={activeTab}
-                    onChange={(e) => setActiveTab(e.target.value)}
-                    className="appearance-none bg-white border border-gray-300 rounded-lg px-4 py-2 pr-8 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-medium text-gray-700"
-                  >
-                    {tabs.map((tab) => (
-                      <option key={tab.id} value={tab.id}>
-                        {tab.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                </div>
-              </div>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => {
+                  // fallback for smaller screens: open search modal or focus search
+                  // We'll just log for now; mobile search UI can be added separately
+                  console.log('Search clicked')
+                }}
+                className="lg:hidden flex items-center justify-center p-3 border border-gray-200 rounded-full bg-gray-50 hover:bg-white transition-all duration-300 hover:border-[#F25D49] hover:text-[#F25D49]"
+              >
+                <Search className="w-6 h-6 text-gray-400 hover:text-[#F25D49] transition-colors" />
+              </motion.button>
 
               {/* Right Side Actions */}
-              <div className="flex items-center space-x-4">
-                {/* User Info */}
-                <div className="hidden md:flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">
-                      {user?.displayName?.charAt(0) || 'U'}
+              <div className="flex items-center space-x-2">
+
+                {/* Wishlist */}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
+                  title="Wishlist"
+                >
+                  <Heart className="w-6 h-6" />
+                  {favorites.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-[#F25D49] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {favorites.length}
                     </span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-800">
-                      {user?.displayName || 'User'}
-                    </p>
-                    <p className="text-xs text-gray-500">Customer</p>
-                  </div>
-                </div>
+                  )}
+                </motion.button>
 
                 {/* Cart */}
                 <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="relative p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="relative p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
+                  title="Shopping Cart"
                 >
                   <ShoppingCart className="w-6 h-6" />
                   {cartItems.length > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    <span className="absolute -top-1 -right-1 bg-[#F25D49] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                       {cartItems.length}
                     </span>
                   )}
                 </motion.button>
 
                 {/* Notifications */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="p-2 text-gray-600 hover:text-blue-600 transition-colors"
-                >
-                  <Bell className="w-6 h-6" />
-                </motion.button>
+                <div className="relative">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="relative p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
+                    title="Notifications"
+                  >
+                    <Bell className="w-6 h-6" />
+                    {notifications.filter(n => !n.read).length > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                        {notifications.filter(n => !n.read).length}
+                      </span>
+                    )}
+                  </motion.button>
+                </div>
 
-                {/* Sign Out */}
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={handleSignOut}
-                  className="p-2 text-gray-600 hover:text-red-600 transition-colors"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-6 h-6" />
-                </motion.button>
+                {/* User Profile */}
+                <div className="relative user-menu-container">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setShowUserMenu(!showUserMenu)}
+                    className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-full transition-all duration-300"
+                  >
+                    <div className="w-10 h-10 bg-[#F55E49] rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-sm">
+                        {user?.displayName?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <p className="text-sm font-semibold text-gray-800">
+                        {user?.displayName || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500">Customer</p>
+                    </div>
+                    <ChevronDown className="w-4 h-4 text-gray-400" />
+                  </motion.button>
+
+                  {/* User Dropdown Menu */}
+                  <AnimatePresence>
+                    {showUserMenu && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-gray-100 py-2 z-50"
+                      >
+                        <div className="px-4 py-3 border-b border-gray-100">
+                          <p className="text-sm font-semibold text-gray-800">{user?.displayName || 'User'}</p>
+                          <p className="text-xs text-gray-500">{user?.email}</p>
+                          <span className="inline-block mt-1 px-2 py-1 bg-[#F25D49]/10 text-[#F25D49] text-xs rounded-full">Customer</span>
+                        </div>
+                        <div className="py-2">
+                          <button
+                            onClick={() => { setActiveTab('profile'); setShowUserMenu(false) }}
+                            className="w-full flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <UserCircle className="w-5 h-5 mr-3 text-[#F55E49]" />
+                            Profile Settings
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('orders'); setShowUserMenu(false) }}
+                            className="w-full flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Package className="w-5 h-5 mr-3 text-[#F25D49]" />
+                            My Orders
+                          </button>
+                          <button
+                            onClick={() => { setActiveTab('favorites'); setShowUserMenu(false) }}
+                            className="w-full flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Heart className="w-5 h-5 mr-3 text-[#F25D49]" />
+                            Wishlist
+                          </button>
+                          <button
+                            onClick={() => setShowUserMenu(false)}
+                            className="w-full flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+                          >
+                            <Settings className="w-5 h-5 mr-3 text-[#F25D49]" />
+                            Settings
+                          </button>
+                        </div>
+                        <div className="border-t border-gray-100 py-2">
+                          <button
+                            onClick={() => { handleSignOut(); setShowUserMenu(false) }}
+                            className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            <LogOut className="w-5 h-5 mr-3" />
+                            Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
 
                 {/* Mobile Menu Button */}
                 <button
                   onClick={() => setShowMobileMenu(!showMobileMenu)}
-                  className="md:hidden p-2 text-gray-600 hover:text-blue-600 transition-colors"
+                  className="lg:hidden p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
                 >
                   {showMobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
               </div>
             </div>
 
-            {/* Mobile Search */}
-            <div className="md:hidden pb-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </div>
-            </div>
           </div>
         </motion.header>
 
@@ -363,14 +467,14 @@ const CustomerDashboard = () => {
           </AnimatePresence>
         </main>
 
-        {/* Mobile Menu Overlay */}
+        {/* Enhanced Mobile Menu Overlay */}
         <AnimatePresence>
           {showMobileMenu && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden"
+              className="fixed inset-0 bg-black bg-opacity-50 z-50 lg:hidden"
               onClick={() => setShowMobileMenu(false)}
             >
               <motion.div
@@ -385,11 +489,25 @@ const CustomerDashboard = () => {
                     <h2 className="text-xl font-bold text-gray-800">Menu</h2>
                     <button
                       onClick={() => setShowMobileMenu(false)}
-                      className="p-2 text-gray-600 hover:text-gray-800"
+                      className="p-2 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
                     >
                       <X className="w-6 h-6" />
                     </button>
                   </div>
+                  
+                  {/* User Info */}
+                  <div className="flex items-center space-x-3 p-4 bg-gradient-to-r from-[#F25D49]/10 to-[#FF6B5B]/10 rounded-xl mb-6">
+                    <div className="w-12 h-12 bg-[#F25D49] rounded-full flex items-center justify-center shadow-lg">
+                      <span className="text-white font-bold text-lg">
+                        {user?.displayName?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-semibold text-gray-800">{user?.displayName || 'User'}</p>
+                      <p className="text-sm text-gray-500">Customer</p>
+                    </div>
+                  </div>
+
                   <nav className="space-y-2">
                     {tabs.map((tab) => (
                       <button
@@ -398,10 +516,10 @@ const CustomerDashboard = () => {
                           setActiveTab(tab.id)
                           setShowMobileMenu(false)
                         }}
-                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
+                        className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 ${
                           activeTab === tab.id
-                            ? 'bg-blue-100 text-blue-700'
-                            : 'text-gray-600 hover:bg-gray-100'
+                            ? 'bg-[#F25D49]/20 text-[#F25D49] border border-[#F25D49]/30'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-[#F25D49]'
                         }`}
                       >
                         <tab.icon className="w-5 h-5" />
@@ -409,18 +527,148 @@ const CustomerDashboard = () => {
                       </button>
                     ))}
                     
+                    {/* Categories Button */}
+                    <button
+                      onClick={() => {
+                        setShowCategoriesSidebar(true)
+                        setShowMobileMenu(false)
+                      }}
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 text-gray-600 hover:bg-gray-100 hover:text-[#F25D49]"
+                    >
+                      <Grid3X3 className="w-5 h-5" />
+                      <span className="font-medium">Categories</span>
+                    </button>
+                    
                     {/* Sign Out Button */}
                     <button
                       onClick={() => {
                         handleSignOut()
                         setShowMobileMenu(false)
                       }}
-                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors text-red-600 hover:bg-red-50"
+                      className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-300 text-red-600 hover:bg-red-50"
                     >
                       <LogOut className="w-5 h-5" />
                       <span className="font-medium">Sign Out</span>
                     </button>
                   </nav>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Enhanced Categories Sidebar */}
+        <AnimatePresence>
+          {showCategoriesSidebar && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex"
+              onClick={() => setShowCategoriesSidebar(false)}
+            >
+              {/* Clear/transparent backdrop that still captures clicks */}
+              <div className="absolute inset-0 bg-transparent" />
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                className="relative z-10 w-80 h-full bg-white shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                      <Layers className="w-6 h-6 mr-2 text-[#F25D49]" />
+                      Categories
+                    </h2>
+                    <button
+                      onClick={() => setShowCategoriesSidebar(false)}
+                      className="p-2 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <Package className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">All Products</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('electronics')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <Star className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">Electronics</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('fashion')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <Heart className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">Fashion</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('home')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <ShoppingBag className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">Home & Kitchen</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('books')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <Package className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">Books</span>
+                    </motion.button>
+                    
+                    <motion.button
+                      whileHover={{ scale: 1.02, x: 5 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => {
+                        setSearchQuery('beauty')
+                        setShowCategoriesSidebar(false)
+                      }}
+                      className="w-full flex items-center p-4 rounded-xl text-gray-600 hover:bg-gradient-to-r hover:from-[#F25D49]/10 hover:to-[#FF6B5B]/10 hover:text-[#F25D49] transition-all duration-300 border border-transparent hover:border-[#F25D49]/20"
+                    >
+                      <Star className="w-6 h-6 mr-4 text-[#F25D49]" />
+                      <span className="font-semibold text-lg">Health & Beauty</span>
+                    </motion.button>
+                  </div>
                 </div>
               </motion.div>
             </motion.div>
