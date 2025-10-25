@@ -3,12 +3,14 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
+import { useCart } from '@/contexts/CartContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
 import OrderHistory from '@/components/customer/OrderHistory'
 import CustomerProfile from '@/components/customer/CustomerProfile'
 import CustomerHero from '@/components/customer/CustomerHero'
+import CartPage from '@/components/customer/CartPage'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   ShoppingBag, 
@@ -33,13 +35,14 @@ import {
 
 const CustomerDashboard = () => {
   const { user, userData, logout } = useAuth()
+  const { addToCart, getTotalItems } = useCart()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const [showCategoriesSidebar, setShowCategoriesSidebar] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [cartItems, setCartItems] = useState([])
+  const [showCart, setShowCart] = useState(false)
   const [favorites, setFavorites] = useState([])
   const [notifications, setNotifications] = useState([
     { id: 1, message: 'New products available!', time: '2 min ago', read: false },
@@ -99,16 +102,7 @@ const CustomerDashboard = () => {
   ]
 
   const handleAddToCart = (product) => {
-    const existingItem = cartItems.find(item => item.proId === product.proId)
-    if (existingItem) {
-      setCartItems(cartItems.map(item => 
-        item.proId === product.proId 
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      ))
-    } else {
-      setCartItems([...cartItems, { ...product, quantity: 1 }])
-    }
+    addToCart(product)
   }
 
   const handleToggleFavorite = (product) => {
@@ -126,10 +120,9 @@ const CustomerDashboard = () => {
         return (
           <div>
             <CustomerHero />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
               <ProductCatalog 
                 searchQuery={searchQuery}
-                onAddToCart={handleAddToCart}
                 onToggleFavorite={handleToggleFavorite}
                 favorites={favorites}
               />
@@ -249,8 +242,8 @@ const CustomerDashboard = () => {
           animate={{ opacity: 1, y: 0 }}
           className="bg-white/95 backdrop-blur-md shadow-lg sticky top-0 z-50 border-b border-gray-100"
         >
-          <div className="w-full px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-20">
+          <div className="w-full px-2 sm:px-4 lg:px-6 xl:px-8">
+            <div className="flex items-center justify-between h-16 sm:h-20">
               {/* Categories button placed before logo */}
               <motion.button
                 whileHover={{ scale: 1.05 }}
@@ -265,12 +258,13 @@ const CustomerDashboard = () => {
               {/* Logo */}
               <motion.div
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-3"
+                className="flex items-center space-x-2 sm:space-x-3"
               >
-                <div className="w-10 h-10 bg-[#F25D49] rounded-xl flex items-center justify-center shadow-lg">
-                  <ShoppingBag className="w-6 h-6 text-white" />
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#F25D49] rounded-xl flex items-center justify-center shadow-lg">
+                  <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold text-[#F55E49]">QuickDelivery</span>
+                <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#F55E49] hidden sm:block">QuickDelivery</span>
+                <span className="text-lg font-bold text-[#F55E49] sm:hidden">QD</span>
               </motion.div>
 
               {/* Search input (inline on lg+, icon only on smaller screens) */}
@@ -310,7 +304,7 @@ const CustomerDashboard = () => {
               </motion.button>
 
               {/* Right Side Actions */}
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-1 sm:space-x-2">
 
                 {/* Wishlist */}
                 <motion.button
@@ -331,13 +325,14 @@ const CustomerDashboard = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => setShowCart(true)}
                   className="relative p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
                   title="Shopping Cart"
                 >
                   <ShoppingCart className="w-6 h-6" />
-                  {cartItems.length > 0 && (
+                  {getTotalItems() > 0 && (
                     <span className="absolute -top-1 -right-1 bg-[#F25D49] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
-                      {cartItems.length}
+                      {getTotalItems()}
                     </span>
                   )}
                 </motion.button>
@@ -672,6 +667,13 @@ const CustomerDashboard = () => {
                 </div>
               </motion.div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Cart Page */}
+        <AnimatePresence>
+          {showCart && (
+            <CartPage onClose={() => setShowCart(false)} />
           )}
         </AnimatePresence>
     </div>

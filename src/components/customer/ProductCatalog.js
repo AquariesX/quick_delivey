@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useCart } from '@/contexts/CartContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import AnimatedCard from '@/components/ui/AnimatedCard'
 import { 
@@ -22,7 +23,8 @@ import {
   Smartphone
 } from 'lucide-react'
 
-const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites }) => {
+const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
+  const { addToCart } = useCart()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
@@ -70,160 +72,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
     }
     fetchSubcategories()
   }, [selectedCategory])
-
-  // Generate dummy products for demonstration (kept for potential dev usage, not used by default)
-  const generateDummyProducts = () => {
-    const dummyProducts = [
-      {
-        proId: 'dummy-1',
-        proName: 'Wireless Bluetooth Headphones',
-        description: 'High-quality wireless headphones with noise cancellation and 30-hour battery life.',
-        price: 199.99,
-        salePrice: 149.99,
-        discount: 25,
-        proImages: ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400'],
-        category: { name: 'Electronics' },
-        vendor: { businessName: 'TechStore Pro', role: 'ADMIN' },
-        reviews: [
-          { rating: 5, comment: 'Amazing sound quality!' },
-          { rating: 4, comment: 'Great battery life' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'electronics',
-        vendorId: 'vendor-1'
-      },
-      {
-        proId: 'dummy-2',
-        proName: 'Smart Fitness Watch',
-        description: 'Track your fitness goals with heart rate monitoring, GPS, and water resistance.',
-        price: 299.99,
-        proImages: ['https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=400'],
-        category: { name: 'Wearables' },
-        vendor: { businessName: 'FitTech Solutions', role: 'VENDOR' },
-        reviews: [
-          { rating: 5, comment: 'Perfect for workouts' },
-          { rating: 5, comment: 'Accurate heart rate tracking' },
-          { rating: 4, comment: 'Good battery life' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'wearables',
-        vendorId: 'vendor-2'
-      },
-      {
-        proId: 'dummy-3',
-        proName: 'Premium Coffee Maker',
-        description: 'Automatic coffee maker with programmable settings and thermal carafe.',
-        price: 89.99,
-        salePrice: 69.99,
-        discount: 22,
-        proImages: ['https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400'],
-        category: { name: 'Kitchen' },
-        vendor: { businessName: 'Home Essentials', role: 'VENDOR' },
-        reviews: [
-          { rating: 4, comment: 'Makes great coffee' },
-          { rating: 5, comment: 'Easy to use' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'kitchen',
-        vendorId: 'vendor-3'
-      },
-      {
-        proId: 'dummy-4',
-        proName: 'Gaming Mechanical Keyboard',
-        description: 'RGB backlit mechanical keyboard with customizable keys and gaming mode.',
-        price: 159.99,
-        proImages: ['https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=400'],
-        category: { name: 'Gaming' },
-        vendor: { businessName: 'GameZone Official', role: 'ADMIN' },
-        reviews: [
-          { rating: 5, comment: 'Best keyboard ever!' },
-          { rating: 5, comment: 'RGB lighting is amazing' },
-          { rating: 4, comment: 'Great for gaming' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'gaming',
-        vendorId: 'vendor-4'
-      },
-      {
-        proId: 'dummy-5',
-        proName: 'Portable Bluetooth Speaker',
-        description: 'Waterproof portable speaker with 360-degree sound and 12-hour battery.',
-        price: 79.99,
-        salePrice: 59.99,
-        discount: 25,
-        proImages: ['https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400'],
-        category: { name: 'Audio' },
-        vendor: { businessName: 'SoundWave Inc', role: 'VENDOR' },
-        reviews: [
-          { rating: 4, comment: 'Great sound quality' },
-          { rating: 5, comment: 'Perfect for outdoor use' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'audio',
-        vendorId: 'vendor-5'
-      },
-      {
-        proId: 'dummy-6',
-        proName: 'Wireless Charging Pad',
-        description: 'Fast wireless charging pad compatible with all Qi-enabled devices.',
-        price: 39.99,
-        proImages: ['https://images.unsplash.com/photo-1583394838336-acd977736f90?w=400'],
-        category: { name: 'Accessories' },
-        vendor: { businessName: 'TechStore Pro', role: 'ADMIN' },
-        reviews: [
-          { rating: 5, comment: 'Charges fast' },
-          { rating: 4, comment: 'Good value for money' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'accessories',
-        vendorId: 'vendor-1'
-      },
-      {
-        proId: 'dummy-7',
-        proName: 'Ergonomic Office Chair',
-        description: 'Comfortable ergonomic chair with lumbar support and adjustable height.',
-        price: 249.99,
-        salePrice: 199.99,
-        discount: 20,
-        proImages: ['https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400'],
-        category: { name: 'Furniture' },
-        vendor: { businessName: 'Office Solutions', role: 'VENDOR' },
-        reviews: [
-          { rating: 5, comment: 'Very comfortable' },
-          { rating: 4, comment: 'Great for long work sessions' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'furniture',
-        vendorId: 'vendor-6'
-      },
-      {
-        proId: 'dummy-8',
-        proName: 'Smart Home Security Camera',
-        description: 'HD security camera with night vision, motion detection, and mobile app.',
-        price: 129.99,
-        proImages: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400'],
-        category: { name: 'Security' },
-        vendor: { businessName: 'SecureHome Pro', role: 'ADMIN' },
-        reviews: [
-          { rating: 5, comment: 'Excellent night vision' },
-          { rating: 4, comment: 'Easy to install' },
-          { rating: 5, comment: 'Great app interface' }
-        ],
-        status: true,
-        approvalStatus: 'Approved',
-        catId: 'security',
-        vendorId: 'vendor-7'
-      }
-    ]
-    return dummyProducts
-  }
+  
 
   const fetchProducts = async () => {
     try {
@@ -284,34 +133,12 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
         console.log('Fetched categories from original API:', data.data.length)
         setCategories(data.data)
       } else {
-        console.log('No real categories found, using dummy categories for demonstration')
-        const dummyCategories = [
-          { id: 'electronics', name: 'Electronics', description: 'Electronic devices and gadgets' },
-          { id: 'wearables', name: 'Wearables', description: 'Smart watches and fitness trackers' },
-          { id: 'kitchen', name: 'Kitchen', description: 'Kitchen appliances and tools' },
-          { id: 'gaming', name: 'Gaming', description: 'Gaming accessories and equipment' },
-          { id: 'audio', name: 'Audio', description: 'Audio devices and speakers' },
-          { id: 'accessories', name: 'Accessories', description: 'Tech accessories and peripherals' },
-          { id: 'furniture', name: 'Furniture', description: 'Office and home furniture' },
-          { id: 'security', name: 'Security', description: 'Home security and surveillance' }
-        ]
-        setCategories(dummyCategories)
+        console.log('Failed to Fetch the Categories')
+    
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
-      console.log('Using dummy categories due to API error')
-      const dummyCategories = [
-        { id: 'electronics', name: 'Electronics', description: 'Electronic devices and gadgets' },
-        { id: 'wearables', name: 'Wearables', description: 'Smart watches and fitness trackers' },
-        { id: 'kitchen', name: 'Kitchen', description: 'Kitchen appliances and tools' },
-        { id: 'gaming', name: 'Gaming', description: 'Gaming accessories and equipment' },
-        { id: 'audio', name: 'Audio', description: 'Audio devices and speakers' },
-        { id: 'accessories', name: 'Accessories', description: 'Tech accessories and peripherals' },
-        { id: 'furniture', name: 'Furniture', description: 'Office and home furniture' },
-        { id: 'security', name: 'Security', description: 'Home security and surveillance' }
-      ]
-      setCategories(dummyCategories)
-    }
+     }
   }
 
   const filteredProducts = products.filter(product => {
@@ -447,7 +274,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
             </div>
             
             <motion.button
-              onClick={() => onAddToCart(product)}
+              onClick={() => addToCart(product)}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               className="px-6 py-2 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-xl hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
@@ -492,7 +319,7 @@ const ProductCatalog = ({ searchQuery, onAddToCart, onToggleFavorite, favorites 
 
   return (
     <div className="w-full overflow-x-hidden">
-      <div className="space-y-8 px-4 sm:px-6 lg:px-8">
+      <div className="space-y-8">
       {/* Header */}
       <motion.div 
         initial={{ opacity: 0, y: 20 }}

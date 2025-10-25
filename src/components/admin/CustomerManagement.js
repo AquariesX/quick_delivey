@@ -157,10 +157,10 @@ const CustomerManagement = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-8"
       >
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
+        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-3">
           Customer Management
         </h1>
-        <p className="text-gray-600">Manage all users, customers, and vendors</p>
+        <p className="text-gray-600 text-lg">Manage all users, customers, and vendors with ease</p>
       </motion.div>
 
       {/* Stats Cards */}
@@ -168,55 +168,87 @@ const CustomerManagement = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
       >
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-xl backdrop-blur-sm"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Total Users</p>
-              <p className="text-2xl font-bold text-gray-900">{stats.totalUsers || 0}</p>
+              <p className="text-sm font-semibold text-blue-700 mb-1">Total Users</p>
+              <p className="text-3xl font-bold text-blue-900">{stats.totalUsers || 0}</p>
+              <p className="text-xs text-blue-600 mt-1">All registered users</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Users className="w-6 h-6 text-blue-600" />
-            </div>
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="p-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl shadow-lg"
+            >
+              <Users className="w-8 h-8 text-white" />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-xl backdrop-blur-sm"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Customers</p>
-              <p className="text-2xl font-bold text-green-600">{stats.totalCustomers || 0}</p>
+              <p className="text-sm font-semibold text-green-700 mb-1">Customers</p>
+              <p className="text-3xl font-bold text-green-900">{stats.totalCustomers || 0}</p>
+              <p className="text-xs text-green-600 mt-1">Active customers</p>
             </div>
-            <div className="p-3 bg-green-100 rounded-lg">
-              <Users className="w-6 h-6 text-green-600" />
-            </div>
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="p-4 bg-gradient-to-br from-green-400 to-green-600 rounded-2xl shadow-lg"
+            >
+              <Users className="w-8 h-8 text-white" />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-xl backdrop-blur-sm"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Vendors</p>
-              <p className="text-2xl font-bold text-blue-600">{stats.totalVendors || 0}</p>
+              <p className="text-sm font-semibold text-purple-700 mb-1">Vendors</p>
+              <p className="text-3xl font-bold text-purple-900">{stats.totalVendors || 0}</p>
+              <p className="text-xs text-purple-600 mt-1">Registered vendors</p>
             </div>
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Store className="w-6 h-6 text-blue-600" />
-            </div>
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="p-4 bg-gradient-to-br from-purple-400 to-purple-600 rounded-2xl shadow-lg"
+            >
+              <Store className="w-8 h-8 text-white" />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
 
-        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
+        <motion.div 
+          whileHover={{ scale: 1.05, y: -5 }}
+          className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-xl backdrop-blur-sm"
+        >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm font-medium text-gray-600">Verified</p>
-              <p className="text-2xl font-bold text-purple-600">{stats.verifiedUsers || 0}</p>
+              <p className="text-sm font-semibold text-orange-700 mb-1">Verified</p>
+              <p className="text-3xl font-bold text-orange-900">{stats.verifiedUsers || 0}</p>
+              <p className="text-xs text-orange-600 mt-1">Email verified</p>
             </div>
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <UserCheck className="w-6 h-6 text-purple-600" />
-            </div>
+            <motion.div 
+              whileHover={{ rotate: 360 }}
+              transition={{ duration: 0.5 }}
+              className="p-4 bg-gradient-to-br from-orange-400 to-orange-600 rounded-2xl shadow-lg"
+            >
+              <UserCheck className="w-8 h-8 text-white" />
+            </motion.div>
           </div>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Filters */}
@@ -224,219 +256,233 @@ const CustomerManagement = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 mb-6"
+        className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl mb-6"
       >
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+          <Filter className="w-5 h-5 mr-2 text-blue-600" />
+          Search & Filter
+        </h3>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search users..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-12 pr-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 placeholder-gray-500"
             />
           </div>
 
           <div className="relative">
-            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Filter className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
             <select
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
-              className="w-full pl-10 pr-8 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              className="w-full pl-12 pr-8 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 appearance-none"
             >
               <option value="">All Roles</option>
               <option value="CUSTOMER">Customer</option>
               <option value="VENDOR">Vendor</option>
               <option value="ADMIN">Admin</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           </div>
 
           <div className="relative">
             <select
               value={verifiedFilter}
               onChange={(e) => setVerifiedFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none"
+              className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 appearance-none"
             >
               <option value="">All Users</option>
               <option value="true">Verified</option>
               <option value="false">Unverified</option>
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+            <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
             onClick={() => {
               setSearchTerm('')
               setRoleFilter('')
               setVerifiedFilter('')
             }}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-6 py-3 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-300 font-medium"
           >
             Clear Filters
-          </button>
+          </motion.button>
         </div>
       </motion.div>
 
-      {/* Customer Table */}
+      {/* Customer Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden"
+        className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl overflow-hidden"
       >
         {loading ? (
-          <div className="p-8 text-center">
-            <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mx-auto mb-4"></div>
-            <p className="text-gray-600">Loading customers...</p>
+          <div className="p-12 text-center">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+              className="w-16 h-16 border-4 border-blue-200 border-t-blue-600 rounded-full mx-auto mb-6"
+            />
+            <p className="text-gray-600 text-lg">Loading customers...</p>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      User
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Contact
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Joined
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="text-xl font-semibold text-gray-800 flex items-center">
+                <Users className="w-6 h-6 mr-3 text-blue-600" />
+                Customer List ({customers.length})
+              </h3>
+            </div>
+            
+            <div className="p-6">
+              {customers.length === 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="text-center py-16"
+                >
+                  <Users className="w-24 h-24 text-gray-300 mx-auto mb-6" />
+                  <h3 className="text-2xl font-bold text-gray-600 mb-2">No customers found</h3>
+                  <p className="text-gray-500">Try adjusting your search or filters</p>
+                </motion.div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <AnimatePresence>
                     {customers.map((customer, index) => (
-                      <motion.tr
+                      <motion.div
                         key={customer.id}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="hover:bg-gray-50 transition-colors"
+                        transition={{ delay: index * 0.1 }}
+                        whileHover={{ scale: 1.02, y: -5 }}
+                        className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 group"
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            <div className="flex-shrink-0 h-10 w-10">
-                              <div className="h-10 w-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                                <span className="text-white font-medium text-sm">
-                                  {customer.username?.charAt(0).toUpperCase() || 'U'}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="ml-4">
-                              <div className="text-sm font-medium text-gray-900">
-                                {customer.username || 'N/A'}
-                              </div>
-                              <div className="text-sm text-gray-500">
-                                ID: {customer.uid?.substring(0, 8)}...
-                              </div>
+                        {/* Customer Header */}
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-3">
+                            <motion.div 
+                              whileHover={{ scale: 1.1 }}
+                              className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center shadow-lg"
+                            >
+                              <span className="text-white font-bold text-lg">
+                                {customer.username?.charAt(0).toUpperCase() || 'U'}
+                              </span>
+                            </motion.div>
+                            <div>
+                              <h4 className="font-semibold text-gray-800 text-lg">{customer.username || 'N/A'}</h4>
+                              <p className="text-sm text-gray-500">ID: {customer.uid?.substring(0, 8)}...</p>
                             </div>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                          
+                          {/* Role Badge */}
                           <div className="flex items-center">
                             {getRoleIcon(customer.role)}
-                            <span className={`ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getRoleColor(customer.role)}`}>
+                            <span className={`ml-2 px-3 py-1 text-xs font-semibold rounded-full ${getRoleColor(customer.role)}`}>
                               {customer.role}
                             </span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">
-                            <div className="flex items-center mb-1">
-                              <Mail className="w-3 h-3 text-gray-400 mr-2" />
-                              {customer.email}
-                            </div>
-                            {customer.phoneNumber && (
-                              <div className="flex items-center">
-                                <Phone className="w-3 h-3 text-gray-400 mr-2" />
-                                {customer.phoneNumber}
-                              </div>
-                            )}
+                        </div>
+
+                        {/* Customer Details */}
+                        <div className="space-y-3 mb-6">
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Mail className="w-4 h-4 mr-3 text-gray-400" />
+                            <span className="truncate">{customer.email}</span>
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
+                          
+                          {customer.phoneNumber && (
+                            <div className="flex items-center text-sm text-gray-600">
+                              <Phone className="w-4 h-4 mr-3 text-gray-400" />
+                              <span>{customer.phoneNumber}</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center text-sm text-gray-600">
+                            <Calendar className="w-4 h-4 mr-3 text-gray-400" />
+                            <span>Joined {new Date(customer.createdAt).toLocaleDateString()}</span>
+                          </div>
+                          
                           <div className="flex items-center">
                             {customer.emailVerification ? (
                               <div className="flex items-center text-green-600">
-                                <Check className="w-4 h-4 mr-1" />
-                                <span className="text-sm">Verified</span>
+                                <Check className="w-4 h-4 mr-2" />
+                                <span className="text-sm font-medium">Verified</span>
                               </div>
                             ) : (
                               <div className="flex items-center text-orange-600">
-                                <AlertCircle className="w-4 h-4 mr-1" />
-                                <span className="text-sm">Unverified</span>
+                                <AlertCircle className="w-4 h-4 mr-2" />
+                                <span className="text-sm font-medium">Unverified</span>
                               </div>
                             )}
                           </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <div className="flex items-center">
-                            <Calendar className="w-3 h-3 text-gray-400 mr-2" />
-                            {new Date(customer.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleEdit(customer)}
-                              className="text-blue-600 hover:text-blue-900 p-1 rounded hover:bg-blue-50 transition-colors"
-                              title="Edit"
-                            >
-                              <Edit3 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(customer.id)}
-                              className="text-red-600 hover:text-red-900 p-1 rounded hover:bg-red-50 transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </motion.tr>
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="flex space-x-2">
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleEdit(customer)}
+                            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-medium"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                            <span>Edit</span>
+                          </motion.button>
+                          
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => handleDelete(customer.id)}
+                            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-xl hover:from-red-600 hover:to-red-700 transition-all duration-300 font-medium"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                            <span>Delete</span>
+                          </motion.button>
+                        </div>
+                      </motion.div>
                     ))}
                   </AnimatePresence>
-                </tbody>
-              </table>
+                </div>
+              )}
             </div>
 
             {/* Pagination */}
-            <div className="bg-gray-50 px-6 py-3 flex items-center justify-between">
-              <div className="text-sm text-gray-700">
-                Showing page {currentPage} of {totalPages}
+            {totalPages > 1 && (
+              <div className="bg-gray-50 px-6 py-4 flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  Showing page {currentPage} of {totalPages}
+                </div>
+                <div className="flex space-x-2">
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                    className="px-4 py-2 text-sm bg-white rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                  >
+                    Previous
+                  </motion.button>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                    className="px-4 py-2 text-sm bg-white rounded-xl hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 font-medium"
+                  >
+                    Next
+                  </motion.button>
+                </div>
               </div>
-              <div className="flex space-x-2">
-                <button
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                  disabled={currentPage === totalPages}
-                  className="px-3 py-1 text-sm bg-white border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Next
-                </button>
-              </div>
-            </div>
+            )}
           </>
         )}
       </motion.div>
@@ -448,22 +494,26 @@ const CustomerManagement = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50"
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-xl p-6 w-full max-w-md"
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-2xl p-8 w-full max-w-lg shadow-2xl"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Edit Customer</h3>
-                <button
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  Edit Customer
+                </h3>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   onClick={() => setShowModal(false)}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-300"
                 >
-                  <X className="w-5 h-5" />
-                </button>
+                  <X className="w-6 h-6" />
+                </motion.button>
               </div>
 
               <EditCustomerForm
@@ -494,85 +544,98 @@ const EditCustomerForm = ({ customer, onSave, onCancel }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Username
-        </label>
-        <input
-          type="text"
-          value={formData.username}
-          onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Username
+          </label>
+          <input
+            type="text"
+            value={formData.username}
+            onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+            className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 placeholder-gray-500"
+            placeholder="Enter username"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Email
+          </label>
+          <input
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 placeholder-gray-500"
+            placeholder="Enter email"
+          />
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Email
-        </label>
-        <input
-          type="email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Phone Number
+          </label>
+          <input
+            type="tel"
+            value={formData.phoneNumber}
+            onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
+            className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 placeholder-gray-500"
+            placeholder="Enter phone number"
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            Role
+          </label>
+          <select
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            className="w-full px-4 py-3 bg-gray-50 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 appearance-none"
+          >
+            <option value="CUSTOMER">Customer</option>
+            <option value="VENDOR">Vendor</option>
+            <option value="ADMIN">Admin</option>
+          </select>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Phone Number
-        </label>
-        <input
-          type="tel"
-          value={formData.phoneNumber}
-          onChange={(e) => setFormData({ ...formData, phoneNumber: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-xl p-4">
+        <div className="flex items-center">
+          <input
+            type="checkbox"
+            id="emailVerification"
+            checked={formData.emailVerification}
+            onChange={(e) => setFormData({ ...formData, emailVerification: e.target.checked })}
+            className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="emailVerification" className="ml-3 block text-sm font-semibold text-gray-700">
+            Email Verified
+          </label>
+        </div>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Role
-        </label>
-        <select
-          value={formData.role}
-          onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        >
-          <option value="CUSTOMER">Customer</option>
-          <option value="VENDOR">Vendor</option>
-          <option value="ADMIN">Admin</option>
-        </select>
-      </div>
-
-      <div className="flex items-center">
-        <input
-          type="checkbox"
-          id="emailVerification"
-          checked={formData.emailVerification}
-          onChange={(e) => setFormData({ ...formData, emailVerification: e.target.checked })}
-          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-        />
-        <label htmlFor="emailVerification" className="ml-2 block text-sm text-gray-700">
-          Email Verified
-        </label>
-      </div>
-
-      <div className="flex space-x-3 pt-4">
-        <button
+      <div className="flex space-x-4 pt-6">
+        <motion.button
           type="submit"
-          className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex-1 bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 font-semibold shadow-lg"
         >
           Save Changes
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           onClick={onCancel}
-          className="flex-1 bg-gray-300 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-400 transition-colors"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          className="flex-1 bg-gradient-to-r from-gray-100 to-gray-200 text-gray-700 py-3 px-6 rounded-xl hover:from-gray-200 hover:to-gray-300 transition-all duration-300 font-semibold"
         >
           Cancel
-        </button>
+        </motion.button>
       </div>
     </form>
   )
