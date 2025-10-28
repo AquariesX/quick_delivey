@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useAuth } from '@/contexts/AuthContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import AnimatedCard from '@/components/ui/AnimatedCard'
 import { 
@@ -15,82 +16,118 @@ import {
   RefreshCw,
   Calendar,
   MapPin,
-  CreditCard
+  CreditCard,
+  X // Added missing X icon
 } from 'lucide-react'
 
 const OrderHistory = () => {
+  const { user, userData } = useAuth()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [filterStatus, setFilterStatus] = useState('all')
 
   useEffect(() => {
-    fetchOrders()
-  }, [])
+    if (userData?.id) {
+      fetchOrders()
+    }
+  }, [userData])
 
   const fetchOrders = async () => {
     try {
-      // Mock data for now - replace with actual API call
-      const mockOrders = [
-        {
-          id: 'ORD-001',
-          date: '2024-01-15',
-          status: 'delivered',
-          total: 125.50,
-          items: [
-            { name: 'Wireless Headphones', price: 79.99, quantity: 1, image: '/placeholder-product.jpg' },
-            { name: 'Phone Case', price: 15.99, quantity: 2, image: '/placeholder-product.jpg' }
-          ],
-          shippingAddress: '123 Main St, City, State 12345',
-          trackingNumber: 'TRK123456789',
-          estimatedDelivery: '2024-01-18'
-        },
-        {
-          id: 'ORD-002',
-          date: '2024-01-14',
-          status: 'shipped',
-          total: 89.99,
-          items: [
-            { name: 'Laptop Stand', price: 45.99, quantity: 1, image: '/placeholder-product.jpg' },
-            { name: 'USB Cable', price: 12.99, quantity: 2, image: '/placeholder-product.jpg' }
-          ],
-          shippingAddress: '456 Oak Ave, City, State 12345',
-          trackingNumber: 'TRK987654321',
-          estimatedDelivery: '2024-01-20'
-        },
-        {
-          id: 'ORD-003',
-          date: '2024-01-13',
-          status: 'processing',
-          total: 156.75,
-          items: [
-            { name: 'Smart Watch', price: 199.99, quantity: 1, image: '/placeholder-product.jpg' }
-          ],
-          shippingAddress: '789 Pine Rd, City, State 12345',
-          trackingNumber: null,
-          estimatedDelivery: '2024-01-22'
-        },
-        {
-          id: 'ORD-004',
-          date: '2024-01-12',
-          status: 'cancelled',
-          total: 67.50,
-          items: [
-            { name: 'Bluetooth Speaker', price: 67.50, quantity: 1, image: '/placeholder-product.jpg' }
-          ],
-          shippingAddress: '321 Elm St, City, State 12345',
-          trackingNumber: null,
-          estimatedDelivery: null
-        }
-      ]
+      setLoading(true)
       
-      setOrders(mockOrders)
+      // Fetch orders from API
+      const response = await fetch(`/api/orders?userId=${userData.id}`)
+      const data = await response.json()
+      
+      if (data.success) {
+        // Transform API data to match component structure
+        const transformedOrders = (data.data || []).map(order => ({
+          id: order.id,
+          date: order.createdAt || order.date,
+          status: (order.status || 'PENDING').toLowerCase(),
+          total: parseFloat(order.totalAmount) || 0,
+          items: (order.orderItems || []).map(item => ({
+            name: item.product?.proName || 'Unknown Product',
+            price: parseFloat(item.price) || 0,
+            quantity: item.quantity || 1,
+            image: item.product?.proImages?.[0] || '/placeholder-product.jpg'
+          })),
+          shippingAddress: order.shippingAddress || 'N/A',
+          trackingNumber: order.trackingNumber || null,
+          estimatedDelivery: order.estimatedDelivery || null,
+          paymentMethod: order.paymentMethod || 'N/A'
+        }))
+        
+        setOrders(transformedOrders)
+      } else {
+        console.error('Failed to fetch orders:', data.error)
+        setOrders([])
+      }
     } catch (error) {
       console.error('Error fetching orders:', error)
+      setOrders([])
     } finally {
       setLoading(false)
     }
   }
+
+  const mockOrders = [
+    {
+      id: 'ORD-001',
+      date: '2024-01-15',
+      status: 'delivered',
+      total: 125.50,
+      items: [
+        { name: 'Wireless Headphones', price: 79.99, quantity: 1, image: '/placeholder-product.jpg' },
+        { name: 'Phone Case', price: 15.99, quantity: 2, image: '/placeholder-product.jpg' }
+      ],
+      shippingAddress: '123 Main St, City, State 12345',
+      trackingNumber: 'TRK123456789',
+      estimatedDelivery: '2024-01-18'
+    },
+    {
+      id: 'ORD-002',
+      date: '2024-01-14',
+      status: 'shipped',
+      total: 89.99,
+      items: [
+        { name: 'Laptop Stand', price: 45.99, quantity: 1, image: '/placeholder-product.jpg' },
+        { name: 'USB Cable', price: 12.99, quantity: 2, image: '/placeholder-product.jpg' }
+      ],
+      shippingAddress: '456 Oak Ave, City, State 12345',
+      trackingNumber: 'TRK987654321',
+      estimatedDelivery: '2024-01-20'
+    },
+    {
+      id: 'ORD-003',
+      date: '2024-01-13',
+      status: 'processing',
+      total: 156.75,
+      items: [
+        { name: 'Smart Watch', price: 199.99, quantity: 1, image: '/placeholder-product.jpg' }
+      ],
+      shippingAddress: '789 Pine Rd, City, State 12345',
+      trackingNumber: null,
+      estimatedDelivery: '2024-01-22'
+    },
+    {
+      id: 'ORD-004',
+      date: '2024-01-12',
+      status: 'cancelled',
+      total: 67.50,
+      items: [
+        { name: 'Bluetooth Speaker', price: 67.50, quantity: 1, image: '/placeholder-product.jpg' }
+      ],
+      shippingAddress: '321 Elm St, City, State 12345',
+      trackingNumber: null,
+      estimatedDelivery: null
+    }
+  ]
+  
+  // Uncomment to use mock data
+  // setOrders(mockOrders)
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -157,7 +194,7 @@ const OrderHistory = () => {
             />
             <div className="flex-1">
               <h4 className="font-medium text-gray-800">{item.name}</h4>
-              <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+              <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
             </div>
             <span className="font-semibold text-gray-800">${item.price}</span>
           </div>
@@ -229,7 +266,7 @@ const OrderHistory = () => {
                 onClick={onClose}
                 className="p-2 text-gray-400 hover:text-gray-600"
               >
-                <XCircle className="w-6 h-6" />
+                <X className="w-6 h-6" /> {/* Using imported X icon */}
               </button>
             </div>
 
@@ -313,69 +350,69 @@ const OrderHistory = () => {
     </AnimatePresence>
   )
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <LoadingSpinner size="lg" text="Loading orders..." />
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-800">Order History</h1>
-          <p className="text-gray-600">
-            Track and manage your orders
-          </p>
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={fetchOrders}
-            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            <RefreshCw className="w-4 h-4" />
-            <span>Refresh</span>
-          </button>
-          
-          <select
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">All Orders</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Orders List */}
-      {filteredOrders.length === 0 ? (
-        <div className="text-center py-12">
-          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-600 mb-2">No orders found</h3>
-          <p className="text-gray-500">You haven&apos;t placed any orders yet</p>
+      {loading ? (
+        <div className="flex items-center justify-center h-64">
+          <LoadingSpinner size="lg" text="Loading orders..." />
         </div>
       ) : (
-        <div className="space-y-6">
-          {filteredOrders.map((order, index) => (
-            <OrderCard key={order.id} order={order} index={index} />
-          ))}
-        </div>
-      )}
+        <>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">Order History</h1>
+              <p className="text-gray-600">
+                Track and manage your orders
+              </p>
+            </div>
+            
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={fetchOrders}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Refresh</span>
+              </button>
+              
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All Orders</option>
+                <option value="processing">Processing</option>
+                <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
 
-      {/* Order Details Modal */}
-      {selectedOrder && (
-        <OrderDetailsModal 
-          order={selectedOrder} 
-          onClose={() => setSelectedOrder(null)} 
-        />
+          {/* Orders List */}
+          {filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
+              <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-600 mb-2">No orders found</h3>
+              <p className="text-gray-500">You haven&apos;t placed any orders yet</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {filteredOrders.map((order, index) => (
+                <OrderCard key={order.id} order={order} index={index} />
+              ))}
+            </div>
+          )}
+
+          {/* Order Details Modal */}
+          {selectedOrder && (
+            <OrderDetailsModal 
+              order={selectedOrder} 
+              onClose={() => setSelectedOrder(null)} 
+            />
+          )}
+        </>
       )}
     </div>
   )

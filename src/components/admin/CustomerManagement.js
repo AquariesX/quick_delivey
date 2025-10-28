@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Users, 
@@ -36,7 +36,7 @@ const CustomerManagement = () => {
   const [showModal, setShowModal] = useState(false)
   const [editingCustomer, setEditingCustomer] = useState(null)
 
-  const fetchCustomers = async () => {
+  const fetchCustomers = useCallback(async () => {
     try {
       setLoading(true)
       const params = new URLSearchParams({
@@ -44,10 +44,10 @@ const CustomerManagement = () => {
         limit: '10',
         search: searchTerm,
         role: roleFilter,
-        verified: verifiedFilter
+        verified: verifiedFilter !== '' ? verifiedFilter : undefined
       })
 
-      const response = await fetch(`/api/users?${params}`)
+      const response = await fetch(`/api/admin/customers?${params}`)
       const data = await response.json()
 
       if (data.success) {
@@ -57,6 +57,7 @@ const CustomerManagement = () => {
           totalUsers: data.stats?.totalUsers || 0,
           totalCustomers: data.stats?.totalCustomers || 0,
           totalVendors: data.stats?.totalVendors || 0,
+          totalAdmins: data.stats?.totalAdmins || 0,
           verifiedUsers: data.stats?.verifiedUsers || 0
         })
       }
@@ -65,11 +66,11 @@ const CustomerManagement = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentPage, searchTerm, roleFilter, verifiedFilter])
 
   useEffect(() => {
     fetchCustomers()
-  }, [currentPage, searchTerm, roleFilter, verifiedFilter])
+  }, [fetchCustomers])
 
   const handleEdit = (customer) => {
     setEditingCustomer(customer)

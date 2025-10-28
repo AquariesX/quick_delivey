@@ -24,6 +24,7 @@ model Users {
   productsAsApprover Product[] @relation("ApproverProducts")
   productsAsCreator  Product[] @relation("CreatorProducts")
   productsAsVendor   Product[] @relation("VendorProducts")
+  orders             Order[]
 
   @@map("users")
 }
@@ -103,6 +104,7 @@ model Product {
   creator           Users          @relation("CreatorProducts", fields: [createdById], references: [uid], onDelete: Cascade)
   subCategory       SubCategory    @relation(fields: [subCatId], references: [subCatId], onDelete: Cascade)
   vendor            Users          @relation("VendorProducts", fields: [vendorId], references: [uid], onDelete: Cascade)
+  orderItems        OrderItem[]
 
   @@index([approveById], map: "products_approve_by_fkey")
   @@index([catId], map: "products_cat_id_fkey")
@@ -110,6 +112,40 @@ model Product {
   @@index([subCatId], map: "products_sub_cat_id_fkey")
   @@index([vendorId], map: "products_vendor_id_fkey")
   @@map("products")
+}
+
+model Order {
+  id               String        @id @default(cuid())
+  userId           String        @map("user_id")
+  status           OrderStatus   @default(PENDING)
+  shippingAddress  String?       @map("shipping_address") @db.VarChar(500)
+  paymentMethod    String?       @map("payment_method") @db.VarChar(50)
+  totalAmount      Decimal       @default(0) @map("total_amount") @db.Decimal(10, 2)
+  trackingNumber   String?       @map("tracking_number") @db.VarChar(100)
+  estimatedDelivery DateTime?    @map("estimated_delivery")
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+  user             Users         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orderItems       OrderItem[]
+
+  @@index([userId], map: "orders_user_id_fkey")
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId    String   @map("order_id")
+  productId  Int      @map("product_id")
+  quantity   Int      @default(1)
+  price      Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product  @relation(fields: [productId], references: [proId], onDelete: Cascade)
+
+  @@index([orderId], map: "order_items_order_id_fkey")
+  @@index([productId], map: "order_items_product_id_fkey")
+  @@map("order_items")
 }
 
 enum UserRole {
@@ -129,4 +165,12 @@ enum ApprovalStatus {
 enum CategoryStatus {
   ACTIVE
   INACTIVE
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
 }

@@ -20,7 +20,7 @@ export async function GET(request) {
     }
 
     // Get orders with pagination
-    const orders = await prisma.orders.findMany({
+    const orders = await prisma.order.findMany({
       where: whereClause,
       include: {
         orderItems: {
@@ -48,7 +48,7 @@ export async function GET(request) {
     })
 
     // Get total count
-    const totalCount = await prisma.orders.count({ where: whereClause })
+    const totalCount = await prisma.order.count({ where: whereClause })
 
     return Response.json({
       success: true,
@@ -81,7 +81,7 @@ export async function POST(request) {
     }
 
     // Create order with items
-    const order = await prisma.orders.create({
+    const order = await prisma.order.create({
       data: {
         userId,
         status: 'PENDING',
@@ -148,7 +148,7 @@ export async function PUT(request) {
     if (shippingAddress) updateData.shippingAddress = shippingAddress
     if (paymentMethod) updateData.paymentMethod = paymentMethod
 
-    const updatedOrder = await prisma.orders.update({
+    const updatedOrder = await prisma.order.update({
       where: { id: orderId },
       data: updateData,
       include: {
@@ -200,12 +200,12 @@ export async function DELETE(request) {
     }
 
     // Delete order items first (due to foreign key constraints)
-    await prisma.orderItems.deleteMany({
+    await prisma.orderItem.deleteMany({
       where: { orderId: orderId }
     })
 
     // Delete the order
-    await prisma.orders.delete({
+    await prisma.order.delete({
       where: { id: orderId }
     })
 

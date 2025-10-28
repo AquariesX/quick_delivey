@@ -8,6 +8,7 @@ import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import DashboardLayout from '@/components/layout/DashboardLayout'
 import CustomerManagement from '@/components/admin/CustomerManagement'
 import ProductManagement from '@/components/admin/ProductManagement'
+import OrderManagement from '@/components/admin/OrderManagement'
 import { 
   Users, 
   Package, 
@@ -109,7 +110,7 @@ const AdminDashboard = () => {
       case 'vendors':
         return <VendorsTab />
       case 'orders':
-        return <OrdersTab />
+        return <OrderManagement />
       case 'settings':
         return <SettingsTab />
       default:
@@ -406,25 +407,6 @@ const VendorsTab = () => {
         </motion.button>
       </div>
       <p className="text-gray-600">Vendor management features coming soon...</p>
-    </div>
-  )
-}
-
-const OrdersTab = () => {
-  return (
-    <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100">
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900">Order Management</h3>
-        <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-2"
-        >
-          <ShoppingCart className="w-4 h-4" />
-          <span>View Orders</span>
-        </motion.button>
-      </div>
-      <p className="text-gray-600">Order management features coming soon...</p>
     </div>
   )
 }

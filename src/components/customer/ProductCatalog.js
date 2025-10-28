@@ -184,73 +184,56 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
     return (
       <motion.div
-        initial={{ opacity: 0, y: 20, scale: 0.9 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ delay: index * 0.1, duration: 0.5 }}
-        whileHover={{ 
-          y: -10, 
-          scale: 1.02,
-          rotateY: 2
-        }}
-        className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-500 group product-card border border-gray-100 hover:border-purple-200"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05, duration: 0.3 }}
+        whileHover={{ y: -5 }}
+        className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 group cursor-pointer"
       >
-        <div className="relative">
+        <div className="relative h-40 bg-gray-100">
           <img 
             src={product.proImages?.[0] || '/placeholder-product.jpg'} 
             alt={product.proName}
-            className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
-          <div className="absolute top-2 right-2 flex space-x-2">
+          <div className="absolute top-2 right-2">
             <motion.button
-              onClick={() => onToggleFavorite(product)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite(product)
+              }}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
-              className="p-3 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:bg-red-50 transition-all duration-300"
+              className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md"
             >
-              <Heart className={`w-5 h-5 ${isFavorite ? 'text-red-500 fill-current' : 'text-gray-400 hover:text-red-500'} transition-colors duration-300`} />
+              <Heart className={`w-4 h-4 ${isFavorite ? 'text-red-500 fill-current' : 'text-gray-400'}`} />
             </motion.button>
-            {product.discount > 0 && (
-              <motion.span 
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="px-3 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold rounded-full shadow-lg"
-              >
-                -{product.discount}%
-              </motion.span>
-            )}
           </div>
         </div>
         
-        <div className="p-4">
-          <div className="mb-3">
-            <motion.span 
-              className="text-xs text-[#F25D49] bg-gradient-to-r from-orange-100 to-red-100 px-3 py-1 rounded-full font-medium"
-              whileHover={{ scale: 1.05 }}
-            >
+        <div className="p-3">
+          <div className="mb-2">
+            <span className="text-xs text-[#F25D49] bg-orange-50 px-2 py-0.5 rounded font-medium">
               {product.category?.name}
-            </motion.span>
+            </span>
           </div>
           
-          <h3 className="font-bold text-gray-800 mb-3 line-clamp-2 group-hover:text-[#F25D49] transition-colors duration-300 text-lg">
+          <h3 className="font-semibold text-sm text-gray-800 mb-1 line-clamp-1 group-hover:text-[#F25D49] transition-colors">
             {product.proName}
           </h3>
           
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-            {product.description}
-          </p>
-          
-          <div className="flex items-center mb-3">
+          <div className="flex items-center mb-2">
             <div className="flex items-center">
               {[...Array(5)].map((_, i) => (
                 <Star
                   key={i}
-                  className={`w-4 h-4 ${
+                  className={`w-3 h-3 ${
                     i < Math.floor(averageRating) ? 'text-yellow-400 fill-current' : 'text-gray-300'
                   }`}
                 />
               ))}
             </div>
-            <span className="text-sm text-gray-500 ml-2">
+            <span className="text-xs text-gray-500 ml-1">
               ({product.reviews?.length || 0})
             </span>
           </div>
@@ -258,44 +241,33 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           <div className="flex items-center justify-between">
             <div>
               {product.salePrice && parseFloat(product.salePrice) < parseFloat(product.price) ? (
-                <div>
-                  <span className="text-xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-[#F25D49]">
                     ${parseFloat(product.salePrice)}
                   </span>
-                  <span className="text-sm text-gray-500 line-through ml-2">
+                  <span className="text-xs text-gray-500 line-through">
                     ${parseFloat(product.price)}
                   </span>
                 </div>
               ) : (
-                <span className="text-xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
+                <span className="text-base font-bold text-[#F25D49]">
                   ${parseFloat(product.price)}
                 </span>
               )}
             </div>
             
             <motion.button
-              onClick={() => addToCart(product)}
+              onClick={(e) => {
+                e.stopPropagation()
+                addToCart(product)
+              }}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className="px-6 py-2 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-xl hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center space-x-2 shadow-lg hover:shadow-xl"
+              className="px-4 py-1.5 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-lg text-xs font-medium hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center gap-1"
             >
-              <ShoppingCart className="w-4 h-4" />
-              <span className="font-medium">Add</span>
+              <ShoppingCart className="w-3 h-3" />
+              <span>Add</span>
             </motion.button>
-          </div>
-          
-          <div className="mt-3 flex items-center justify-between">
-            <div className="text-xs text-gray-500">
-              Sold by: <span className="font-medium text-[#F25D49]">{product.vendor?.businessName || 'Unknown Vendor'}</span>
-            </div>
-            {product.vendor?.role === 'ADMIN' && (
-              <motion.span 
-                className="px-2 py-1 bg-gradient-to-r from-green-100 to-emerald-100 text-green-800 text-xs font-bold rounded-full"
-                whileHover={{ scale: 1.05 }}
-              >
-                Official Store
-              </motion.span>
-            )}
           </div>
         </div>
       </motion.div>
@@ -629,9 +601,9 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               </motion.button>
             </motion.div>
           ) : (
-            <div className={`grid gap-6 ${
+            <div className={`grid gap-4 ${
               viewMode === 'grid' 
-                ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5' 
                 : 'grid-cols-1'
             }`}>
               {sortedProducts.map((product, index) => (

@@ -443,10 +443,10 @@ const ProductManagement = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  <AnimatePresence>
+                  <AnimatePresence mode="wait">
                     {products.map((product, index) => (
                       <motion.tr
-                        key={product.id}
+                        key={`${product.id}-${index}`}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
