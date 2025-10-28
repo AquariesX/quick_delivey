@@ -71,51 +71,109 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
-    const { userId, items, shippingAddress, paymentMethod, totalAmount } = await request.json()
+    const body = await request.json()
+    const { userId, items, shippingAddress, paymentMethod, totalAmount } = body
     
-    if (!userId || !items || !Array.isArray(items) || items.length === 0) {
+    // Enhanced validation
+    if (!userId) {
       return Response.json({
         success: false,
-        error: 'User ID and items are required'
+        error: 'User ID is required'
       }, { status: 400 })
     }
 
-    // Create order with items
-    const order = await prisma.order.create({
-      data: {
-        userId,
-        status: 'PENDING',
-        shippingAddress: shippingAddress || '',
-        paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
-        totalAmount: parseFloat(totalAmount) || 0,
-        orderItems: {
-          create: items.map(item => ({
-            productId: item.proId,
-            quantity: item.quantity || 1,
-            price: parseFloat(item.price) || 0
-          }))
-        }
-      },
-      include: {
-        orderItems: {
-          include: {
-            product: {
-              include: {
-                category: true,
-                vendor: true
-              }
-            }
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return Response.json({
+        success: false,
+        error: 'Order items are required'
+      }, { status: 400 })
+    }
+
+    // Validate items format
+    for (const item of items) {
+      if (!item.proId || !item.quantity || !item.price) {
+        return Response.json({
+          success: false,
+          error: 'Each item must have proId, quantity, and price'
+        }, { status: 400 })
+      }
+    }
+
+    if (!totalAmount || totalAmount <= 0) {
+      return Response.json({
+        success: false,
+        error: 'Total amount must be greater than 0'
+      }, { status: 400 })
+    }
+
+    // Check if user exists
+    const userExists = await prisma.users.findUnique({
+      where: { id: userId }
+    })
+
+    if (!userExists) {
+      return Response.json({
+        success: false,
+        error: 'User not found'
+      }, { status: 404 })
+    }
+
+    // Verify products exist and are available
+    const productIds = items.map(item => parseInt(item.proId))
+    const products = await prisma.product.findMany({
+      where: { 
+        proId: { in: productIds },
+        approvalStatus: 'Approved' // Only allow approved products
+      }
+    })
+
+    if (products.length !== productIds.length) {
+      return Response.json({
+        success: false,
+        error: 'Some products are not available or not approved'
+      }, { status: 400 })
+    }
+
+    // Create order with items in a transaction
+    const order = await prisma.$transaction(async (tx) => {
+      const newOrder = await tx.order.create({
+        data: {
+          userId,
+          status: 'PENDING',
+          shippingAddress: shippingAddress || '',
+          paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+          totalAmount: parseFloat(totalAmount),
+          orderItems: {
+            create: items.map(item => ({
+              productId: parseInt(item.proId),
+              quantity: parseInt(item.quantity),
+              price: parseFloat(item.price)
+            }))
           }
         },
-        user: {
-          select: {
-            id: true,
-            username: true,
-            email: true,
-            phoneNumber: true
+        include: {
+          orderItems: {
+            include: {
+              product: {
+                include: {
+                  category: true,
+                  vendor: true
+                }
+              }
+            }
+          },
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+              phoneNumber: true
+            }
           }
         }
-      }
+      })
+
+      return newOrder
     })
 
     return Response.json({
@@ -125,9 +183,32 @@ export async function POST(request) {
     })
   } catch (error) {
     console.error('Error creating order:', error)
+    
+    // More detailed error handling for Vercel deployment
+    if (error.code === 'P2002') {
+      return Response.json({
+        success: false,
+        error: 'Duplicate order detected'
+      }, { status: 409 })
+    }
+    
+    if (error.code === 'P2025') {
+      return Response.json({
+        success: false,
+        error: 'Referenced record not found'
+      }, { status: 404 })
+    }
+
+    if (error.name === 'PrismaClientKnownRequestError') {
+      return Response.json({
+        success: false,
+        error: 'Database operation failed'
+      }, { status: 500 })
+    }
+
     return Response.json({
       success: false,
-      error: 'Failed to create order'
+      error: 'Failed to create order. Please try again.'
     }, { status: 500 })
   }
 }

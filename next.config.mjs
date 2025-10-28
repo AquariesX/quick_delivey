@@ -4,6 +4,51 @@ const nextConfig = {
     // Speed up CI builds by skipping lint errors during production build
     ignoreDuringBuilds: true,
   },
+  experimental: {
+    // Enable modern bundling features
+    optimizePackageImports: ['@mui/material', 'framer-motion', 'lucide-react'],
+  },
+  webpack: (config, { isServer }) => {
+    // Optimize client-side bundles
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
+      }
+    }
+    
+    // Reduce bundle size by optimizing imports
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+          },
+          mui: {
+            test: /[\\/]node_modules[\\/]@mui[\\/]/,
+            name: 'mui',
+            chunks: 'all',
+            priority: 10,
+          },
+          framer: {
+            test: /[\\/]node_modules[\\/]framer-motion[\\/]/,
+            name: 'framer-motion',
+            chunks: 'all',
+            priority: 10,
+          },
+        },
+      },
+    }
+    
+    return config
+  },
   images: {
     remotePatterns: [
       {

@@ -166,80 +166,161 @@ const OrderHistory = () => {
   const OrderCard = ({ order, index }) => (
     <AnimatedCard
       delay={index * 0.1}
-      className="p-6 hover-lift"
+      className="p-6 hover-lift bg-gradient-to-br from-white to-gray-50/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300"
     >
       <div className="flex items-start justify-between mb-4">
         <div>
-          <h3 className="text-lg font-semibold text-gray-800">Order #{order.id}</h3>
-          <p className="text-sm text-gray-500 flex items-center mt-1">
+          <motion.h3 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 + 0.2 }}
+            className="text-lg font-semibold text-gray-800 group-hover:text-[#F25D49] transition-colors"
+          >
+            Order #{order.id.slice(-8)}
+          </motion.h3>
+          <motion.p 
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 + 0.3 }}
+            className="text-sm text-gray-500 flex items-center mt-1"
+          >
             <Calendar className="w-4 h-4 mr-1" />
-            {new Date(order.date).toLocaleDateString()}
-          </p>
+            {new Date(order.date).toLocaleDateString('en-US', {
+              weekday: 'short',
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric'
+            })}
+          </motion.p>
         </div>
-        <div className="flex items-center space-x-2">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ delay: index * 0.1 + 0.4 }}
+          className="flex items-center space-x-2"
+        >
           {getStatusIcon(order.status)}
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)} shadow-sm`}>
             {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
           </span>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="space-y-3 mb-4">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: index * 0.1 + 0.5 }}
+        className="space-y-3 mb-4"
+      >
         {order.items.map((item, itemIndex) => (
-          <div key={itemIndex} className="flex items-center space-x-3">
-            <img 
-              src={item.image} 
-              alt={item.name}
-              className="w-12 h-12 object-cover rounded-lg"
-            />
-            <div className="flex-1">
-              <h4 className="font-medium text-gray-800">{item.name}</h4>
-              <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+          <motion.div 
+            key={itemIndex}
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1 + 0.6 + (itemIndex * 0.1) }}
+            className="flex items-center space-x-3 p-3 bg-white/60 rounded-lg hover:bg-white/80 transition-all duration-200"
+          >
+            <div className="relative">
+              <img 
+                src={item.image} 
+                alt={item.name}
+                className="w-12 h-12 object-cover rounded-lg shadow-sm"
+                onError={(e) => {
+                  e.target.src = '/placeholder-product.jpg'
+                }}
+              />
+              <div className="absolute -top-1 -right-1 bg-[#F25D49] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
+                {item.quantity}
+              </div>
             </div>
-            <span className="font-semibold text-gray-800">${item.price}</span>
-          </div>
+            <div className="flex-1">
+              <h4 className="font-medium text-gray-800 hover:text-[#F25D49] transition-colors">{item.name}</h4>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">${item.price}</span> × {item.quantity}
+              </p>
+            </div>
+            <span className="font-bold text-[#F25D49] bg-[#F25D49]/10 px-3 py-1 rounded-lg">
+              ${(item.price * item.quantity).toFixed(2)}
+            </span>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
-      <div className="border-t pt-4">
-        <div className="flex items-center justify-between mb-3">
-          <span className="text-sm text-gray-600">Total Amount:</span>
-          <span className="text-lg font-bold text-gray-800">${order.total}</span>
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.1 + 0.8 }}
+        className="border-t border-gray-200/50 pt-4"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <span className="text-sm font-medium text-gray-600">Total Amount:</span>
+          <span className="text-2xl font-bold bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] bg-clip-text text-transparent">
+            ${order.total.toFixed(2)}
+          </span>
         </div>
         
-        <div className="flex items-center justify-between">
-          <div className="flex space-x-3">
-            <button
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+          <div className="flex flex-wrap gap-2">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={() => setSelectedOrder(order)}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
             >
               <Eye className="w-4 h-4" />
               <span>View Details</span>
-            </button>
+            </motion.button>
             
             {order.status === 'delivered' && (
-              <button className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors">
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+              >
                 <Star className="w-4 h-4" />
                 <span>Rate Order</span>
-              </button>
+              </motion.button>
             )}
             
             {order.status === 'processing' && (
-              <button className="flex items-center space-x-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+              >
                 <XCircle className="w-4 h-4" />
                 <span>Cancel Order</span>
-              </button>
+              </motion.button>
+            )}
+
+            {(order.status === 'shipped' || order.status === 'delivered') && (
+              <motion.button 
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 text-white rounded-lg hover:shadow-lg transition-all duration-300"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Reorder</span>
+              </motion.button>
             )}
           </div>
           
           {order.trackingNumber && (
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Tracking:</p>
-              <p className="font-mono text-sm text-blue-600">{order.trackingNumber}</p>
-            </div>
+            <motion.div 
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 + 0.9 }}
+              className="text-right bg-blue-50 p-3 rounded-lg"
+            >
+              <p className="text-sm font-medium text-gray-600 flex items-center justify-end">
+                <Truck className="w-4 h-4 mr-1" />
+                Tracking:
+              </p>
+              <p className="font-mono text-sm font-bold text-blue-700">{order.trackingNumber}</p>
+            </motion.div>
           )}
         </div>
-      </div>
+      </motion.div>
     </AnimatedCard>
   )
 
@@ -405,7 +486,7 @@ const OrderHistory = () => {
             </div>
           )}
 
-          {/* Order Details Modal */}
+          {/*  Order Details Modal */}
           {selectedOrder && (
             <OrderDetailsModal 
               order={selectedOrder} 

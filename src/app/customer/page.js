@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuth } from '@/contexts/AuthContext'
 import { useCart } from '@/contexts/CartContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 import { useRouter } from 'next/navigation'
 import { checkUserAccess, getUserRole } from '@/lib/authHelpers'
 import ProductCatalog from '@/components/customer/ProductCatalog'
@@ -11,6 +12,7 @@ import OrderHistory from '@/components/customer/OrderHistory'
 import CustomerProfile from '@/components/customer/CustomerProfile'
 import CustomerHero from '@/components/customer/CustomerHero'
 import CartPage from '@/components/customer/CartPage'
+import WishlistPage from '@/components/customer/WishlistPage'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import { 
   ShoppingBag, 
@@ -36,6 +38,7 @@ import {
 const CustomerDashboard = () => {
   const { user, userData, logout } = useAuth()
   const { addToCart, getTotalItems } = useCart()
+  const { getTotalWishlistItems } = useWishlist()
   const router = useRouter()
   const [activeTab, setActiveTab] = useState('products')
   const [searchQuery, setSearchQuery] = useState('')
@@ -97,7 +100,8 @@ const CustomerDashboard = () => {
   const tabs = [
     { id: 'products', label: 'Products', icon: Package },
     { id: 'orders', label: 'My Orders', icon: ShoppingBag },
-    { id: 'favorites', label: 'Favorites', icon: Heart },
+    { id: 'wishlist', label: 'Wishlist', icon: Heart },
+    { id: 'favorites', label: 'Favorites', icon: Star },
     { id: 'profile', label: 'Profile', icon: User }
   ]
 
@@ -133,6 +137,12 @@ const CustomerDashboard = () => {
         return (
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <OrderHistory />
+          </div>
+        )
+      case 'wishlist':
+        return (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <WishlistPage />
           </div>
         )
       case 'favorites':
@@ -256,16 +266,18 @@ const CustomerDashboard = () => {
               </motion.button>
 
               {/* Logo */}
-              <motion.div
+              <motion.button
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center space-x-2 sm:space-x-3"
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setActiveTab('products')}
+                className="flex items-center space-x-2 sm:space-x-3 focus:outline-none"
               >
                 <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#F25D49] rounded-xl flex items-center justify-center shadow-lg">
                   <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                 </div>
                 <span className="text-lg sm:text-xl lg:text-2xl font-bold text-[#F55E49] hidden sm:block">QuickDelivery</span>
                 <span className="text-lg font-bold text-[#F55E49] sm:hidden">QD</span>
-              </motion.div>
+              </motion.button>
 
               {/* Search input (inline on lg+, icon only on smaller screens) */}
               <div className="hidden lg:flex items-center justify-center px-3">
@@ -310,13 +322,14 @@ const CustomerDashboard = () => {
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  onClick={() => setActiveTab('wishlist')}
                   className="relative p-3 text-gray-600 hover:text-[#F25D49] hover:bg-[#F25D49]/10 rounded-full transition-all duration-300"
                   title="Wishlist"
                 >
                   <Heart className="w-6 h-6" />
-                  {favorites.length > 0 && (
+                  {getTotalWishlistItems() > 0 && (
                     <span className="absolute -top-1 -right-1 bg-[#F25D49] text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {favorites.length}
+                      {getTotalWishlistItems()}
                     </span>
                   )}
                 </motion.button>

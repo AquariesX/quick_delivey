@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useCart } from '@/contexts/CartContext'
+import { useWishlist } from '@/contexts/WishlistContext'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
 import AnimatedCard from '@/components/ui/AnimatedCard'
 import { 
@@ -25,6 +26,7 @@ import {
 
 const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
   const { addToCart } = useCart()
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist()
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [subcategories, setSubcategories] = useState([])
@@ -58,6 +60,20 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
           return
         }
         const response = await fetch(`/api/products?type=subcategories&categoryId=${selectedCategory}`)
+        
+        // Check if response is ok
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`)
+        }
+
+        // Check if response is JSON
+        const contentType = response.headers.get('content-type')
+        if (!contentType || !contentType.includes('application/json')) {
+          const textResponse = await response.text()
+          console.error('Expected JSON but got:', textResponse.substring(0, 200))
+          throw new Error('Response is not JSON')
+        }
+
         const data = await response.json()
         if (data.success && Array.isArray(data.data)) {
           setSubcategories(data.data)
@@ -80,6 +96,20 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
       console.log('Fetching products from database...')
 
       const response = await fetch('/api/products?type=products')
+      
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text()
+        console.error('Expected JSON but got:', textResponse.substring(0, 200))
+        throw new Error('Response is not JSON')
+      }
+
       const data = await response.json()
       
       console.log('API Response:', data)
@@ -125,6 +155,20 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
       console.log('Fetching categories from original API...')
       
       const response = await fetch('/api/products?type=categories')
+      
+      // Check if response is ok
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+
+      // Check if response is JSON
+      const contentType = response.headers.get('content-type')
+      if (!contentType || !contentType.includes('application/json')) {
+        const textResponse = await response.text()
+        console.error('Expected JSON but got:', textResponse.substring(0, 200))
+        throw new Error('Response is not JSON')
+      }
+
       const data = await response.json()
       
       console.log('Categories API Response:', data)
@@ -134,11 +178,12 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
         setCategories(data.data)
       } else {
         console.log('Failed to Fetch the Categories')
-    
+        setCategories([])
       }
     } catch (error) {
       console.error('Error fetching categories:', error)
-     }
+      setCategories([])
+    }
   }
 
   const filteredProducts = products.filter(product => {
@@ -179,6 +224,16 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
 
   const ProductCard = ({ product, index }) => {
     const isFavorite = favorites.find(fav => fav.proId === product.proId)
+    const inWishlist = isInWishlist(product.proId)
+
+    const handleWishlistToggle = (e) => {
+      e.stopPropagation()
+      if (inWishlist) {
+        removeFromWishlist(product.proId)
+      } else {
+        addToWishlist(product)
+      }
+    }
     const averageRating = product.reviews?.length ? 
       product.reviews.reduce((sum, review) => sum + review.rating, 0) / product.reviews.length : 0
 
@@ -256,18 +311,34 @@ const ProductCatalog = ({ searchQuery, onToggleFavorite, favorites }) => {
               )}
             </div>
             
-            <motion.button
-              onClick={(e) => {
-                e.stopPropagation()
-                addToCart(product)
-              }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="px-4 py-1.5 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-lg text-xs font-medium hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center gap-1"
-            >
-              <ShoppingCart className="w-3 h-3" />
-              <span>Add</span>
-            </motion.button>
+            <div className="flex items-center gap-2">
+              <motion.button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  addToCart(product)
+                }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-1 px-3 py-1.5 bg-gradient-to-r from-[#F25D49] to-[#FF6B5B] text-white rounded-lg text-xs font-medium hover:from-[#F25D49]/90 hover:to-[#FF6B5B]/90 transition-all duration-300 flex items-center justify-center gap-1"
+              >
+                <ShoppingCart className="w-3 h-3" />
+                <span>Add</span>
+              </motion.button>
+              
+              <motion.button
+                onClick={handleWishlistToggle}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`px-2 py-1.5 rounded-lg text-xs font-medium transition-all duration-300 flex items-center justify-center ${
+                  inWishlist 
+                    ? 'bg-[#F25D49]/20 text-[#F25D49] border border-[#F25D49]/30' 
+                    : 'bg-gray-100 text-gray-600 hover:bg-[#F25D49]/10 hover:text-[#F25D49]'
+                }`}
+                title={inWishlist ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              >
+                <Heart className={`w-3 h-3 ${inWishlist ? 'fill-current' : ''}`} />
+              </motion.button>
+            </div>
           </div>
         </div>
       </motion.div>
