@@ -88,7 +88,12 @@ const CartPage = ({ onClose }) => {
           onClose?.()
         }, 3000)
       } else {
-        alert('Failed to place order: ' + data.error)
+        const errorMessage = data.error || 'Unknown error occurred'
+        const helpMessage = data.help ? `\n\n${data.help}` : ''
+        alert(`Failed to place order: ${errorMessage}${helpMessage}`)
+        
+        // Log detailed error for debugging
+        console.error('Order placement failed:', data)
       }
     } catch (error) {
       console.error('Error placing order:', error)

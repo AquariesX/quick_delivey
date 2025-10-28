@@ -1,5 +1,10 @@
 import { prisma } from '@/lib/prisma'
 
+// Test prisma connection
+if (!prisma) {
+  console.error('Prisma client is not initialized')
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -71,8 +76,21 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    // Check if Prisma client is available and DATABASE_URL is configured
+    if (!prisma || !process.env.DATABASE_URL) {
+      console.error('❌ Database not configured. DATABASE_URL environment variable is missing.')
+      console.log('📋 Please follow DATABASE_SETUP.md for configuration instructions.')
+      return Response.json({
+        success: false,
+        error: 'Database not configured. Please set DATABASE_URL in your .env file.',
+        help: 'Check DATABASE_SETUP.md for setup instructions'
+      }, { status: 500 })
+    }
+
     const body = await request.json()
     const { userId, items, shippingAddress, paymentMethod, totalAmount } = body
+    
+    console.log('Order creation request:', { userId, itemCount: items?.length, totalAmount })
     
     // Enhanced validation
     if (!userId) {
@@ -135,46 +153,57 @@ export async function POST(request) {
     }
 
     // Create order with items in a transaction
-    const order = await prisma.$transaction(async (tx) => {
-      const newOrder = await tx.order.create({
-        data: {
-          userId,
-          status: 'PENDING',
-          shippingAddress: shippingAddress || '',
-          paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
-          totalAmount: parseFloat(totalAmount),
-          orderItems: {
-            create: items.map(item => ({
-              productId: parseInt(item.proId),
-              quantity: parseInt(item.quantity),
-              price: parseFloat(item.price)
-            }))
-          }
-        },
-        include: {
-          orderItems: {
-            include: {
-              product: {
-                include: {
-                  category: true,
-                  vendor: true
-                }
-              }
+    console.log('Starting order creation transaction...')
+    
+    let order
+    try {
+      order = await prisma.$transaction(async (tx) => {
+        console.log('Inside transaction - creating order...')
+        
+        const newOrder = await tx.order.create({
+          data: {
+            userId,
+            status: 'PENDING',
+            shippingAddress: shippingAddress || '',
+            paymentMethod: paymentMethod || 'CASH_ON_DELIVERY',
+            totalAmount: parseFloat(totalAmount),
+            orderItems: {
+              create: items.map(item => ({
+                productId: parseInt(item.proId),
+                quantity: parseInt(item.quantity),
+                price: parseFloat(item.price)
+              }))
             }
           },
-          user: {
-            select: {
-              id: true,
-              username: true,
-              email: true,
-              phoneNumber: true
+          include: {
+            orderItems: {
+              include: {
+                product: {
+                  include: {
+                    category: true,
+                    vendor: true
+                  }
+                }
+              }
+            },
+            user: {
+              select: {
+                id: true,
+                username: true,
+                email: true,
+                phoneNumber: true
+              }
             }
           }
-        }
-      })
+        })
 
-      return newOrder
-    })
+        console.log('Order created successfully:', newOrder.id)
+        return newOrder
+      })
+    } catch (transactionError) {
+      console.error('Transaction failed:', transactionError)
+      throw transactionError
+    }
 
     return Response.json({
       success: true,
